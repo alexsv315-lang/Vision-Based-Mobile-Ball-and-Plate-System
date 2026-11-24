@@ -131,5 +131,3 @@ python codigo/Control10-3_v7_UART.py
 
 python codigo/analisis_resultados.py
 python codigo/pid_metrics.py
-
-![Trajectories](figuras/Fig10_trajectories_5tests.png)
