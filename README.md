@@ -89,3 +89,45 @@ Tested variants for the inner loop:
 ![Interface](figuras/Fig09_interface.png)
 
 ## Repository Structure
+
+### Code Description
+
+| File | What it does |
+|---|---|
+| `Control10-3_v7_UART.py` | Main control: PID for wheels + UART communication |
+| `enlace_myrio.py` | Communication link with myRIO |
+| `analisis_resultados.py` | Analysis and plots of experimental results |
+| `pid_metrics.py` | Metrics: overshoot, settling time, steady-state error |
+| `pid_figs.py` | Generation of PID figures |
+
+### Data Description
+
+The CSVs in `datos/` are from the **inner loop (PID for wheels/motors)** tests:
+
+| File | Controller | Test |
+|---|---|---|
+| `PD_01.csv` | PD | Base PD test |
+| `PD_03_P1.csv` | PD | PD test, configuration 03 - P1 |
+| `PD_03_P2.csv` | PD | PD test, configuration 03 - P2 |
+| `PD_03_P3.csv` | PD | PD test, configuration 03 - P3 |
+| `PD_AGRESIVO.csv` | PD aggressive | High gains: faster, more overshoot |
+| `PD2_04_1.csv` | PD2 | Second version PD, test 04-1 |
+| `PD2_04_2.csv` | PD2 | Second version PD, test 04-2 |
+| `PD2_04_3.csv` | PD2 | Second version PD, test 04-3 |
+| `PD2_05_1.csv` | PD2 | Second version PD, test 05-1 |
+| `PD2_05_2.csv` | PD2 | Second version PD, test 05-2 |
+| `PD2_05_3.csv` | PD2 | Second version PD, test 05-3 |
+| `PD2_10.csv` | PD2 | Second version PD, test 10 |
+| `PID_integral_suave.csv` | PID | PID with smooth integral to remove steady-state error |
+
+## How to Run
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+
+python codigo/Control10-3_v7_UART.py
+
+python codigo/analisis_resultados.py
+python codigo/pid_metrics.py
