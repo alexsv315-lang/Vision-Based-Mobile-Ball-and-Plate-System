@@ -40,3 +40,52 @@ Main components:
 
 This system does NOT use a single controller. It uses **two controllers in cascade**:
 
+
+### 1. Outer Loop: LQR for the Ball (Vision)
+
+The LQR controller is the brain of the system.
+
+- Input: Ball position and velocity estimated from the camera
+- State vector: `[x, y, vx, vy, theta_x, theta_y]`
+- Output: Desired plate inclination `theta_x_ref`, `theta_y_ref`
+
+LQR is used here because the ball-on-plate is a multivariable system
+(2 axes coupled). LQR finds the optimal tilt that minimizes both
+position error and control effort, which gives smoother and more
+stable behavior than a simple PID for the ball.
+
+![Control Architecture](figuras/Fig06_control_architecture.png)
+
+### 2. Inner Loop: PID for Wheels / Motors
+
+The PID controller is the muscle of the system.
+
+- Input: Desired tilt from LQR
+- Output: Motor / servo commands via UART to myRIO
+- Goal: Reach the desired tilt fast, without overshoot or steady-state error
+
+PID is used here because it is fast, robust, and ideal for direct
+motor control where we need quick response and disturbance rejection.
+
+Tested variants for the inner loop:
+- PD
+- PD aggressive (high gains)
+- PD2
+- PID with smooth integral (to remove steady-state error)
+
+> **Summary:** LQR decides **WHAT** tilt is needed. PID decides **HOW** to move the motors to achieve it.
+
+## Vision Pipeline
+
+1. Camera capture
+2. RGB -> HSV conversion
+3. Green color segmentation by HSV thresholding
+4. Morphological cleaning (opening / closing)
+5. Centroid detection with `moments` / `connectedComponents`
+6. Position + velocity estimation for LQR
+
+![Vision Pipeline](figuras/Fig07_vision_pipeline.png)
+![Color Detection](figuras/Fig08_color_detection.png)
+![Interface](figuras/Fig09_interface.png)
+
+## Repository Structure
