@@ -1,0 +1,2311 @@
+% =============================================================================
+% HardwareX-style report -- EC2 (complete version)
+% Mechatronic Systems Design 2026-2, UTEC
+% Uses only packages already present in the project.
+% Text in RED marked [TO COMPLETE: ...] must be filled in by the authors.
+% =============================================================================
+
+\documentclass[11pt,letterpaper]{article}
+
+% -----------------------------
+% Encoding and typography
+% -----------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{comment}
+\usepackage{amsmath,amssymb}
+
+% -----------------------------
+% Page layout and section style
+% -----------------------------
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{titlesec}
+\titleformat{\section}[block]{\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}[block]{\bfseries}{\thesubsection}{0.5em}{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+
+% -----------------------------
+% Lists
+% -----------------------------
+\usepackage{enumitem}
+\setlist[itemize]{topsep=3pt,itemsep=2pt,parsep=0pt}
+\setlist[enumerate]{topsep=3pt,itemsep=2pt,parsep=0pt}
+
+% -----------------------------
+% Tables
+% -----------------------------
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.18}
+
+% -----------------------------
+% Colors and hyperlinks
+% -----------------------------
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    filecolor=magenta,
+    urlcolor=blue
+}
+\urlstyle{same}
+
+\definecolor{mastheadgray}{RGB}{230,230,230}
+\definecolor{elsblue}{RGB}{0,114,188}
+
+% Items the authors still have to complete (printed in red)
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TO COMPLETE: #1]}}}
+
+% -----------------------------
+% Author biography (shows a placeholder if the photo is missing)
+% -----------------------------
+\newcommand{\authorbio}[3]{%
+    \noindent
+    \begin{minipage}[t]{0.15\textwidth}
+        \vspace{0pt}
+        \centering
+        \IfFileExists{#2}{%
+            \includegraphics[width=0.95\linewidth,height=3.4cm,keepaspectratio]{#2}%
+        }{%
+            \relax%
+        }
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[t]{0.81\textwidth}
+        \vspace{0pt}
+        \textbf{#1}\\[0.25em]
+        #3
+    \end{minipage}
+    \par\vspace{0.6cm}
+}
+
+\begin{document}
+
+% =============================================================================
+% MASTHEAD
+% =============================================================================
+\noindent
+\begin{minipage}[c]{0.16\textwidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{FOTOS/UTEC-Logo.jpg}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.80\textwidth}
+    \colorbox{mastheadgray}{
+    \begin{minipage}{\linewidth}
+        \centering
+        \vspace{0.2cm}
+        {\small Final Project 2026-2}\par
+        \vspace{0.15cm}
+        {\LARGE\bfseries Mechatronic Systems Design}\par
+        \vspace{0.2cm}
+        {\normalsize University of Engineering and Technology - UTEC}\par
+        \vspace{0.1cm}
+        {\small \url{www.utec.edu.pe}}\par
+        \vspace{0.15cm}
+    \end{minipage}
+    }
+\end{minipage}
+
+\vspace{0.2cm}
+\noindent\rule{\textwidth}{0.4pt}
+\vspace{0.2cm}
+
+% =============================================================================
+% TITLE AND AUTHORS
+% =============================================================================
+\textit{Hardware article}
+
+\vspace{0.25cm}
+
+{\LARGE\bfseries A Vision-Based Ball-and-Plate Balancing Platform Mounted on a Mobile Robot}
+
+\vspace{0.4cm}
+
+\textbf{Angel Giovani Garcia Motta, Thomas Mat\'ias Flores Baltodano, Alejandro Guerra Figueroa, Carlos Eduardo Hilario Mayta, Alex Claudio Valenzuela Quispe}
+
+\textit{Department of Mechatronic Engineering, University of Engineering and Technology (UTEC), Lima, Per\'u}
+
+\vspace{0.4cm}
+
+% =============================================================================
+% ARTICLE INFO + ABSTRACT
+% =============================================================================
+\noindent
+\begin{minipage}[t]{0.32\textwidth}
+\textbf{ARTICLE INFO}\par
+\vspace{0.05cm}
+\noindent\rule{\linewidth}{0.4pt}
+\vspace{0.05cm}
+\textit{Keywords:}\\
+Ball-and-plate system\\
+Vision-based control\\
+Linear quadratic regulator\\
+Kalman filter\\
+Mobile robot\\
+NI myRIO\\
+Raspberry Pi camera module\\
+Servo-actuated platform
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.64\textwidth}
+\textbf{ABSTRACT}\par
+\vspace{0.05cm}
+\noindent\rule{\linewidth}{0.4pt}
+\vspace{0.05cm}
+This article describes the design, construction and validation of a
+ball-and-plate balancing platform mounted on a differential-drive mobile
+robot. The base is driven by two DC motors with encoders and is
+controlled by an NI myRIO with a proportional position law and a PD
+wheel-speed loop selected among seven tested tunings. A $20\times20$~cm PLA plate on a central
+spherical joint is tilted by two MG996R servomotors through
+crank--connecting rod linkages. A Raspberry Pi 4B with an OV5647 camera
+detects the 3~cm ball by HSV color segmentation, estimates its position
+and velocity with a Kalman filter that compensates the camera delay,
+and computes the plate tilt with an LQR controller with integral
+action. The myRIO
+enables the balancing loop through a digital line and receives the ball
+position through UART. The sensing architecture was selected with a weighted Pugh matrix, and
+the system was developed and validated following the V-model. In three runs on flat floor along
+a C-shaped path, the mean distance between the ball and the plate
+center was 0.96~cm and the ball stayed within
+2~cm of the center 93\,\% of the time. In four runs on a $10^\circ$ ramp
+these values were 1.29~cm and 78\,\%. The ball did not fall in any run.
+\vspace{0.05cm}
+\noindent\rule{\linewidth}{0.4pt}
+\vspace{0.05cm}
+\end{minipage}
+
+\vspace{0.6cm}
+
+% =============================================================================
+% SPECIFICATIONS TABLE
+% =============================================================================
+\newpage
+
+\textbf{Specifications table}\par
+
+\begin{tabularx}{\textwidth}{|L{0.25\textwidth}|Y|}
+\hline
+\textbf{Hardware name} &
+Mobile Robot with a Vision-Based Ball-and-Plate Balancing Platform \\
+\hline
+\textbf{Subject area} &
+\begin{minipage}[t]{\linewidth}
+\begin{itemize}[leftmargin=1.2em,nosep]
+    \item Engineering and material science
+    \item Educational tools and open-source alternatives to existing infrastructure
+\end{itemize}
+\end{minipage} \\
+\hline
+\textbf{Hardware type} &
+\begin{minipage}[t]{\linewidth}
+\begin{itemize}[leftmargin=1.2em,nosep]
+    \item Electrical engineering and computer science
+    \item Mechanical engineering and materials science
+\end{itemize}
+\end{minipage} \\
+\hline
+\textbf{Closest commercial analog} &
+No commercial product was identified that combines a mobile robotic base
+with a vision-based ball-and-plate mechanism for ball stabilization
+during motion. Desktop ball-and-plate trainers exist for control
+education, but they operate on a fixed base. \\
+\hline
+\textbf{Open-source license} &
+GNU General Public License Version 2 (GPL-2.0). \\
+\hline
+\textbf{Cost of hardware} &
+Approximately USD 1,398 (detailed in Table~\ref{tab:bom}). \\
+\hline
+\textbf{Source file repository} &
+\url{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System.git} \\
+\hline
+\end{tabularx}
+
+% =============================================================================
+% MAIN BODY
+% =============================================================================
+\newpage
+
+\section{Hardware in context}
+
+Benchmark systems play a central role in control and mechatronics
+because they allow algorithms and design decisions to be tested on a
+physical plant whose behavior is well understood. Kaheman et al.\
+illustrate this idea with the multi-arm pendulum on a cart, a benchmark
+whose difficulty lies not only in its dynamics but also in the physical
+constraints of the hardware, the control authority of the actuator, and
+the placement of the sensors \cite{Kaheman2023}. The ball-and-plate
+system, the two-dimensional extension of the ball-and-beam problem
+\cite{Hauser1992}, plays a similar role: a ball must be kept near a
+reference position by tilting a plate, which combines unstable,
+nonlinear dynamics with the need for real-time sensing and actuation.
+Awtar et al.\ presented one of the best-known implementations, a
+ball-on-plate system designed and built by students in a mechatronics
+course, documenting hardware design, sensor and actuator selection,
+modeling, parameter identification, controller design and experimental
+testing \cite{Awtar2002}. This makes the ball-and-plate a natural choice
+for an educational mechatronic project.
+
+Different sensing strategies have been used to measure the position of
+the ball. Computer vision is attractive because it measures the ball
+without physical contact with the plate. Park and Lee studied visual
+servoing for the motion control of a ball on a plate \cite{Park2003},
+and Cheng and Tsai developed a two-degree-of-freedom ball-and-plate
+system in which a camera provided the ball position and a linear
+quadratic regulator (LQR) commanded the plate orientation through two
+servomotors \cite{ChengTsai2016}. Vision also has costs. Kaheman et al.\
+point out that, compared with encoder-based measurements, vision-based
+tracking requires additional computational resources, which is relevant
+when high sampling rates are needed \cite{Kaheman2023}. In this journal,
+Myers et al.\ showed that open-source video tracking can provide
+high-quality data at low cost in a double-pendulum platform
+\cite{Myers2020}. These works motivate the main architectural decision
+of this project: to dedicate one processing unit to image acquisition,
+ball-position estimation and plate control, so that the vision workload
+does not compete with the locomotion control of the robot.
+
+Most ball-and-plate implementations, however, are designed for a fixed
+base. When the plate is carried by a moving vehicle, the motion of the
+base and the slope of the terrain become additional disturbances that
+the balancing system must reject. A related problem in robotics is the
+waiter's problem, in which a robot must transport objects on a tray
+without grasping them. Selvaggio et al.\ proposed a model predictive
+non-sliding manipulation control for non-prehensile object
+transportation \cite{Selvaggio2023}, Heins and Schoellig addressed the
+problem on a mobile manipulator with a whole-body model predictive
+controller that also avoids obstacles \cite{Heins2023}, and Brei et
+al.\ studied real-time, safe motion planning and control for the
+manipulation of unsecured objects \cite{Brei2024}. In these works the
+transported object rests on a tray, the main concern is to prevent it
+from sliding or tipping, and the platforms are mobile manipulators. In a
+ball-and-plate system the ball rolls freely and the plate must be
+actively tilted to keep it in place. The problem studied here combines
+both ideas: a rolling object that must be kept near a reference position
+while its supporting surface is carried by a moving base over flat and
+inclined terrain.
+
+Unlike conventional fixed-base ball-and-plate systems, the proposed
+platform integrates active ball stabilization with differential-drive
+locomotion. It therefore provides an experimental setup, built from
+commercial educational parts, for evaluating ball-balancing control
+under the disturbances caused by the motion of the vehicle and by
+inclined terrain.
+
+\section{Hardware description}
+
+The hardware integrates two mechatronic subsystems on a single chassis
+(Fig.~\ref{fig:proto_cad}): a differential-drive mobile base and a
+two-axis ball-and-plate mechanism. A camera mounted on a mast above the
+plate measures the position of the ball, and an inertial measurement
+unit (IMU) on the plate is used to calibrate it. Fig.~\ref{fig:views}
+shows the orthographic views of the CAD model and Fig.~\ref{fig:photos}
+the built prototype on the bench and on the test track.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.78\textwidth]{FOTOS/Fig01_prototype_CAD_annotated.png}
+    \caption{CAD model of the complete prototype. Blue labels: mobile
+    base subsystem; orange labels: balancing platform; purple labels:
+    camera positioning system.}
+    \label{fig:proto_cad}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig_views_CAD.png}
+    \caption{Orthographic views of the CAD model: (a) front, (b) rear,
+    (c) side and (d) top. The camera is mounted at the top of the mast,
+    about 30~cm above the plate, looking down at its center.}
+    \label{fig:views}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig05_real_prototype_photos.png}
+    \caption{Built prototype. (a) Bench test of the balancing platform,
+    (b) and (c) integrated robot running on the MDF test track with the
+    ball balanced on the plate.}
+    \label{fig:photos}
+\end{figure}
+
+The main design decisions and their justification are summarized below.
+Each of them is developed in the following subsections.
+
+\begin{itemize}
+    \item \textbf{Distributed architecture with a self-contained balancing
+    loop.} Locomotion runs on the NI myRIO and the complete balancing
+    loop (camera, estimation, control and servo PWM) runs on the
+    Raspberry Pi 4B. In the first version the servo PWM was generated by
+    the myRIO, so every servo command had to cross the inter-processor
+    link. Moving the servo outputs to a PCA9685 driver controlled by the
+    Raspberry Pi removes that link from the loop: the UART latency only
+    affects the position display, not the stability of the balancing
+    loop.
+    \item \textbf{Contact-free sensing with a fixed plate region.} A
+    camera measures the ball without touching the plate
+    \cite{Park2003,ChengTsai2016}. The four corners of the plate are
+    fixed in the image instead of being tracked every frame
+    (Section~\ref{sec:vision}).
+    \item \textbf{Hue-based segmentation of a saturated ball on a white
+    plate}, robust to the shading of the sphere and to changes of
+    illumination (Section~\ref{sec:vision}).
+    \item \textbf{Separate regulated supplies} for the Raspberry Pi and
+    the servos, so that servo current peaks do not cause under-voltage
+    of the computer (Section~\ref{sec:power}).
+    \item \textbf{Two-axis platform driven by crank--connecting rod
+    linkages}, a simple mechanism that converts the rotation of each servo
+    into a tilt of the plate with a reduction ratio set by the geometry,
+    which improves the angular resolution of the plate
+    (Section~\ref{sec:platform}).
+\end{itemize}
+
+\subsection{Design methodology}
+\label{sec:method}
+The project was developed with the V-model for mechatronic systems
+\cite{VDI2206}, shown in Fig.~\ref{fig:vmodel}. The requirements were
+decomposed into a system design (two subsystems with separate
+processors), a subsystem design (mechanism, power supply, vision,
+control) and the implementation. Each design level was then verified by
+a test at the same level: unit tests of each component, integration
+tests of the platform with the base stopped, and system tests with the
+robot moving on flat floor and on the $10^\circ$ ramp
+(Section~\ref{sec:validation}). When a test did not meet its objective,
+the corresponding design step was repeated; for example, the controller
+was retuned from $\omega_n=5$ to $3$~rad/s after the integration tests.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig00_V_model.png}
+    \caption{V-model applied to the project. Each design step on the
+    left is verified by the test at the same level on the right.}
+    \label{fig:vmodel}
+\end{figure}
+
+The selection of the ball-position sensor, the component with the
+largest effect on the architecture, was justified with a Pugh matrix
+\cite{Pugh1991} (Table~\ref{tab:pugh}). A resistive touch panel, a
+common sensor in ball-and-plate systems, was taken as the reference
+(datum). Each alternative was scored as better ($+1$), equal ($0$) or
+worse ($-1$) than the datum for each criterion, and the scores were
+multiplied by the weight of the criterion (1 to 5), defined by the team
+according to the requirements of a plate carried by a moving robot.
+
+\begin{table}[H]
+\centering
+\caption{Pugh matrix for the selection of the ball-position sensor
+(datum: resistive touch panel; $+1$ better, $0$ equal, $-1$ worse than
+the datum).}
+\label{tab:pugh}
+\small
+\begin{tabularx}{\textwidth}{@{}L{6.6cm}cYYY@{}}
+\toprule
+\textbf{Criterion} & \textbf{Weight} & \textbf{Touch panel (datum)} & \textbf{Camera + Raspberry Pi} & \textbf{Two IR distance sensors} \\
+\midrule
+No contact; any plate material (3D-printed PLA) & 4 & 0 & $+1$ & $+1$ \\
+Reliable reading with a light 3~cm ball on a moving, vibrating base & 4 & 0 & $+1$ & $0$ \\
+Both axes measured with a single sensor & 3 & 0 & $0$ & $-1$ \\
+Sampling rate & 3 & 0 & $-1$ & $-1$ \\
+Additional data for the interface (image, position, logging) & 3 & 0 & $+1$ & $0$ \\
+Computational load & 2 & 0 & $-1$ & $0$ \\
+Sensitivity to lighting & 2 & 0 & $-1$ & $-1$ \\
+\midrule
+\textbf{Weighted score} & & \textbf{0} & $\mathbf{+4}$ & $\mathbf{-4}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The camera obtained the highest score, mainly because it measures the
+ball without contact and is not affected by the vibration of the moving
+base. Its disadvantages (lower sampling rate, computational load and
+sensitivity to lighting) were addressed in the design: a dedicated
+processor, a reduced region of interest, a Kalman filter with delay
+compensation, and HSV segmentation (Section~\ref{sec:vision}).
+
+\subsection{Mobile base}
+The mobile base has four wheels: two rear wheels driven by DC motors and
+two passive omnidirectional wheels at the front. The chassis is built
+with TETRIX aluminum channels (Fig.~\ref{fig:proto_cad}). Each driven
+wheel has a radius of 51~mm and is powered by a 12~V TETRIX
+TorqueNADO DC motor with a quadrature encoder read by the NI myRIO. The
+motors are driven by a Cytron MDD10A dual H-bridge, which receives a PWM
+signal and a direction signal per channel from the myRIO
+\cite{MDD10A,myRIO}. Table~\ref{tab:base} summarizes the main
+characteristics of the base. In tests carried out without the
+ball-and-plate platform, the motors reached approximately 96~rpm, close
+to the no-load speed given by the manufacturer.
+
+\begin{table}[H]
+\centering
+\caption{Characteristics of the mobile base. Manufacturer values come
+from the datasheet of the DC motors; the speed was measured by the
+authors.}
+\label{tab:base}
+\small
+\begin{tabularx}{\textwidth}{@{}L{6cm} Y@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Wheels & 4 (2 driven, 2 omnidirectional) \\
+Radius of the driven wheels & 51~mm \\
+Motor supply voltage & 12~V \\
+No-load speed (manufacturer) & 100~rpm \\
+No-load current (manufacturer) & 200~mA \\
+Stall torque (manufacturer) & 34~kg$\cdot$cm (470~oz$\cdot$in) \\
+Stall current (manufacturer) & 5.5~A \\
+Measured speed without platform load & approximately 96~rpm \\
+Driver & MDD10A H-bridge, PWM and direction from the NI myRIO \\
+Controller & NI myRIO-1900, LabVIEW \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Ball-and-plate platform}
+\label{sec:platform}
+The plate is a $20\times20$~cm PLA plate supported at its center by a
+3D-printed column that ends in a spherical joint (Fig.~\ref{fig:mech}).
+The joint carries the weight of the plate, so the servos only provide
+the tilting moments. Each axis is actuated by one MG996R servomotor
+through a crank--connecting rod linkage: the servo horn acts as the
+crank, and a rod with articulated ends connects it to the underside of
+the plate, at a distance $d$ from the central joint. When the crank of
+radius $r$ rotates an angle $\varphi$ from the leveled position, the
+end of the rod rises approximately $r\sin\varphi$ and the plate tilts
+\begin{equation}
+\theta \approx \arcsin\!\left(\frac{r}{d}\sin\varphi\right)
+\approx \frac{r}{d}\,\varphi \quad\text{(small angles)}.
+\label{eq:linkage}
+\end{equation}
+The ratio $G=r/d$ (degrees of plate per degree of servo) works as a
+reduction: it reduces the torque required from the servo and improves
+the angular resolution of the plate, at the cost of a smaller tilt
+range. This mechanism was chosen because it is simple, it is the usual
+solution for servo-driven ball-and-plate systems, and it can be built
+with the servo horns, two rods and a 3D-printed support.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig02_mechanism_CAD_annotated.png}
+    \caption{Two-axis tilt mechanism. The plate pivots on a central
+    spherical joint. Each axis is driven by one MG996R servomotor through
+    a crank (servo horn) and a connecting rod attached to the underside
+    of the plate.}
+    \label{fig:mech}
+\end{figure}
+
+Since $r$, $d$ and the angles of the rods are not exactly the same on
+both axes, $G$ was not calculated from the geometry but identified
+experimentally by the control program: with no ball on the plate, each
+servo is moved $\pm 6^\circ$ about its leveled position while the IMU
+measures the change of inclination of the plate. The identified values
+were
+\begin{equation}
+G_X = 0.21, \qquad G_Y = 0.30 ,
+\end{equation}
+with the X axis measured as roll and the Y axis as pitch of the IMU.
+These gains determine the resolution and the range of the platform.
+One count of the PCA9685 (12 bits at 50~Hz) is
+$20\,000/4096 = 4.9~\mu$s, equivalent to $0.44^\circ$ of servo
+rotation with the 500--2500~$\mu$s range used for $180^\circ$; on the
+plate this is $0.09^\circ$ (X) and $0.13^\circ$ (Y). With the servo
+travel limited by software to $\pm50^\circ$, the small-angle estimate
+of the maximum plate tilt is $G\cdot 50^\circ = 10.5^\circ$ (X) and
+$15^\circ$ (Y). Eq.~\eqref{eq:linkage} shows that the real range is
+smaller, because the gain of the linkage decreases as the crank
+rotates (it is proportional to $\cos\varphi$): with $\varphi=50^\circ$
+it gives about $9.3^\circ$ (X) and $13.3^\circ$ (Y). The software
+limit of the commanded tilt ($\pm10^\circ$, Section~\ref{sec:lqr}) is
+common to both axes; on X the $\pm50^\circ$ servo clamp acts first and
+limits the real tilt to about $9.3^\circ$. In all the logged runs the
+largest commanded tilt about X was $4.4^\circ$, so this axis never
+reached its mechanical limit. Separate limits per axis ($9^\circ$ on X,
+$10^\circ$ on Y) are recommended for steeper slopes. This limitation is
+discussed in Section~\ref{sec:validation}. Table~\ref{tab:platform}
+summarizes the platform.
+
+\begin{table}[H]
+\centering
+\caption{Characteristics of the ball-and-plate platform. Servomotor
+values are taken from the manufacturer's datasheet \cite{MG996R}.}
+\label{tab:platform}
+\small
+\begin{tabularx}{\textwidth}{@{}L{5.6cm} Y@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Degrees of freedom & 2 (rotation about X and Y) \\
+Plate & $20 \times 20$~cm, PLA (measured active area $19.45 \times 19.00$~cm) \\
+Ball & Orange, 3~cm diameter \\
+Central support & 3D-printed PLA column with spherical joint \\
+Actuators & 2 $\times$ MG996R servomotors, one per axis \\
+Transmission & Crank (servo horn) + connecting rod per axis \\
+Identified gain plate/servo & $G_X=0.21$, $G_Y=0.30$ \\
+Plate resolution (1 PWM count) & $0.09^\circ$ (X), $0.13^\circ$ (Y) \\
+Servo supply & 7.0~V from an XL4016 buck converter \\
+Servo operating voltage (datasheet) & 4.8 to 7.2~V \\
+Servo stall torque (datasheet) & 9.4~kgf$\cdot$cm at 4.8~V; 11~kgf$\cdot$cm at 6~V \\
+Servo command & PCA9685, 50~Hz, 500--2500~$\mu$s, 12-bit \\
+Servo range used & $\pm 50^\circ$ about the leveled position \\
+Leveled position (servo angle) & Set in the program; $\approx101^\circ$ (X) and $\approx97^\circ$ (Y) in the final assembly \\
+Commanded plate tilt limit & $\pm 10^\circ$ \\
+Plate orientation sensor & MPU-6500 IMU on the plate, I2C to the Raspberry Pi 4B \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Electrical architecture and power supply}
+\label{sec:power}
+Fig.~\ref{fig:wiring} shows the connections. The system has two
+independent power domains with a common ground.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig03_connection_diagram.png}
+    \caption{Connection diagram. Red: power; blue: control signals; green:
+    communication buses; purple: camera interface. The Raspberry Pi 4B
+    drives the servos through the PCA9685 and reads the IMU on the same
+    I2C bus. The myRIO enables the balancing loop with a digital line and
+    receives the ball position through UART.}
+    \label{fig:wiring}
+\end{figure}
+
+\textbf{Mobile base domain.} The 12~V NiMH TETRIX battery powers the
+MDD10A H-bridge directly and the myRIO through an XL4016 buck converter
+set to 10~V, within the 6--16~V input range of the myRIO-1900
+\cite{myRIO}.
+The encoders are powered at 5~V from the myRIO.
+
+\textbf{Balancing platform domain.} A custom-assembled 12~V, 8~Ah
+lithium-ion battery pack, with a nominal output of 12~V and a maximum
+current of 5~A, feeds two buck converters. The cell configuration and
+the protection circuit of the pack were not documented by its
+assembler, and no fuse was used in the prototype. For a safe
+reproduction, a pack with a BMS and a fuse of about 6~A in series with
+its positive terminal are recommended, which also covers the worst-case
+demand of the servos and the Raspberry Pi:
+
+\begin{itemize}
+    \item An \textbf{XL4015} (rated 5~A \cite{XL4015}) set to 5.1~V powers
+    the Raspberry Pi 4B, which requires a 5.1~V, 3~A supply
+    \cite{RPi4}. A dedicated converter is used because the Raspberry
+    Pi reduces its clock or resets when its input drops below the
+    under-voltage threshold. Servo current peaks on a shared supply
+    would cause such drops. The converter works below 60\,\% of its
+    rated current, which limits its heating during long continuous
+    operation. The control program also logs under-voltage and
+    temperature flags reported by the Raspberry Pi every 10~s, which
+    allows this decision to be verified during the tests.
+    \item An \textbf{XL4016} (rated 8~A \cite{XL4016}) set to 7.0~V powers
+    the servos through the V+ terminal of the PCA9685. The two MG996R
+    servos can draw about 2.5~A each at stall \cite{MG996R}, so the
+    worst-case demand of 5~A is below the rating of the converter. The
+    voltage is set at 7.0~V, inside the 4.8--7.2~V operating range,
+    because the torque and speed of the servo increase with voltage. It
+    must be adjusted with a multimeter before the servos are connected,
+    since the maximum rating is only 0.2~V above.
+\end{itemize}
+
+\textbf{Signals.} The camera is connected to the CSI-2 port of the
+Raspberry Pi with a 15-pin to 22-pin flat flex cable. The PCA9685
+(address 0x40) and the MPU-6500 (address 0x68) share the I2C bus of the
+Raspberry Pi and use 3.3~V logic. The PCA9685 generates the servo pulses
+in hardware \cite{PCA9685}, which avoids the timing jitter of software
+PWM under a non-real-time operating system.
+
+\textbf{Link between the processors.} Two lines and a common ground
+connect the Raspberry Pi and the connector A (MXP) of the myRIO
+(Table~\ref{tab:link}). Both devices use 3.3~V logic \cite{myRIO}, so no
+level shifter is needed.
+\begin{itemize}
+    \item \textbf{UART} (Raspberry Pi TX to myRIO RX): it sends the
+    estimated ball position so that it can be plotted on the LabVIEW
+    front panel. The format is 115200~baud, 8 data bits, no parity, one
+    stop bit (8N1), without flow control. Each message is an ASCII line
+    \texttt{x;y;e} terminated by a line feed (0x0A), where \texttt{x} and
+    \texttt{y} are the position in cm with two decimals and \texttt{e}
+    is the state of the control (1 = ON, 0 = OFF); for example,
+    \texttt{-1.25;0.40;1}. Messages are sent at 20~Hz, which is enough
+    for a plot. A text format was chosen because LabVIEW reads it
+    directly with \textit{VISA Read} and \textit{Scan From String}, using
+    the line feed as termination character. On the Raspberry Pi, the
+    PL011 hardware UART is assigned to GPIO14/15 (serial console and
+    Bluetooth disabled), because the alternative mini-UART changes its
+    baud rate with the clock frequency of the processor \cite{RPiUART}. A
+    loss of this link does not affect the balancing loop, which runs
+    entirely on the Raspberry Pi.
+    \item \textbf{Enable line} (myRIO DIO1 to Raspberry Pi GPIO27): a high
+    level enables the balancing control and a low level disables it. The
+    Raspberry Pi acts only on changes of level, with a 50~ms debounce, so
+    the state of the line at start-up does not activate the control by
+    itself. The DIO lines of the myRIO have internal 40~k$\Omega$ pull-up
+    resistors to 3.3~V \cite{myRIO}; since no pull-down resistor was
+    installed on GPIO27, the line goes high when the LabVIEW program is
+    stopped. The start-up order of Section~\ref{sec:operation} avoids an
+    unintended activation, and a 10~k$\Omega$ pull-down resistor is
+    recommended as an improvement.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Connections between the Raspberry Pi 4B and the NI myRIO-1900
+(MXP connector A).}
+\label{tab:link}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Signal} & \textbf{Raspberry Pi 4B} & \textbf{NI myRIO (MXP A)} & \textbf{Settings} \\
+\midrule
+UART & GPIO14 / TXD (pin 8) & UART.RX (pin 10) & 115200 baud, 8N1, ASCII, LF \\
+Enable & GPIO27 (pin 13), input & DIO1 (pin 13), output & high = ON, low = OFF \\
+Ground & GND (pin 6) & DGND (pin 8) & common reference \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Vision subsystem}
+\label{sec:vision}
+The ball position is measured with a Rev.~1.3 camera module for
+Raspberry Pi based on the 5~MP OV5647 CMOS sensor
+\cite{OV5647,RPiCamera}. The sensor supports up to 90 frames per
+second at $640\times480$ \cite{OV5647}; the program configures
+$640\times480$ at 60 frames per second, and the control loop runs at
+the frame rate; the mean rate measured in the logs of the system tests
+was 60.9 frames per second. Images are acquired with the Picamera2 library
+\cite{Picamera2} in a dedicated thread that always keeps only the
+newest frame, so the control loop never processes an old frame. If no
+frame arrives for 2~s, the camera is restarted automatically.
+The ball is detected with a \textbf{color-based blob detection
+algorithm}: HSV color thresholding, morphological filtering, contour
+extraction with the border-following algorithm of Suzuki and Abe
+\cite{Suzuki1985}, shape filtering, and computation of the centroid with
+image moments \cite{Gonzalez2018}. Fig.~\ref{fig:vision} shows the
+processing chain, implemented with OpenCV \cite{OpenCV}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig07_vision_pipeline.png}
+    \caption{Ball-position measurement pipeline running on the Raspberry
+    Pi 4B.}
+    \label{fig:vision}
+\end{figure}
+
+\textbf{Fixed plate region instead of plate tracking.} The program can
+detect the white plate in every frame (threshold of low saturation and
+high value, contour, polygon approximation and temporal median of the
+corners). This option was discarded for operation for two reasons.
+First, it requires processing the full $640\times480$ frame every cycle,
+whereas with fixed corners only the region of interest around the plate
+is processed, at half resolution (a quarter of its pixels). Second, in
+preliminary tests the center of the tracked plate was not a fixed point
+in the image: it varied by about 0.3~cm or more from frame to frame
+because of the noise of the corner estimates. Since the ball position
+is measured relative to that center, this variation entered the
+controller directly as measurement noise. Instead, the four corners are
+detected once with the plate leveled (or marked by hand with the mouse)
+and saved in a file. A constant homography $H$ then maps image pixels to
+plate coordinates in centimeters \cite{Hartley2004}. This assumption is
+valid because the camera and the pivot of the plate are fixed to the
+same chassis, so the center of the plate does not move in the image when
+the plate tilts. The error introduced by the tilt grows with the
+distance to the center and is zero at the center. At $10^\circ$ of
+tilt, the projection of the edge of the plate (9.7~cm from the center)
+shortens by $9.7(1-\cos 10^\circ)\approx0.15$~cm, and the edge rises
+$9.7\sin 10^\circ \approx 1.7$~cm towards the camera. With the camera
+$D\approx30$~cm above the plate, this produces a scale error of
+$1.7/30\approx5.6\,\%$, about 0.55~cm at the edge. At 2~cm from the
+center, where the ball is regulated, the same effects give less than
+0.05~cm. The program includes an optional parallax correction that uses
+the IMU angle and $D$; it was disabled in the reported tests because the
+error near the reference is negligible.
+
+\textbf{Why the ball appears blue to the camera.} With the
+\texttt{RGB888} format, Picamera2 stores each pixel in memory in the
+order [B,~G,~R] \cite{Picamera2}, while the program converts the image
+to HSV with an RGB-to-HSV conversion. As a result, the red and blue
+channels are swapped in everything the program sees. The real ball is
+orange (OpenCV hue $\approx 5$, on a 0--179 scale), but in the swapped
+image it has hue $\approx 115$, which is blue (Fig.~\ref{fig:color}b).
+This is not a defect for the measurement: the threshold is defined and
+tuned in the same swapped color space, so the segmentation is
+consistent. The detection range is therefore H~=~100--130 in the
+program, which corresponds to the orange of the real ball.
+
+\textbf{Why HSV and these thresholds.} The ball is a sphere, so its
+brightness is not uniform: the side facing the light is bright, the
+opposite side is shaded, and the overall level changes with the
+lighting of the room. In RGB space a fixed threshold mixes color and
+brightness, so the darker parts of the ball are lost when the scene
+darkens. HSV separates the chromaticity (hue H and saturation S) from
+the brightness (value V) \cite{Gonzalez2018}. The program thresholds
+mainly on hue (a narrow band of 30 units), requires a high saturation
+($S\geq120$) to reject the white plate and specular highlights, which
+have low saturation, and accepts a low value ($V\geq70$) so that the
+shaded half of the ball is still detected. This is why a strongly
+colored ball on a white plate was chosen: on the plate, the only
+strongly saturated object is the ball. The thresholds can be adjusted
+with sliders while viewing the binary mask. As Fig.~\ref{fig:color}c
+shows, the color threshold alone also accepts other objects with a
+similar color (the MDF floor of the track and some cables). For this
+reason the mask is intersected with the fixed plate region
+(Fig.~\ref{fig:color}d). Fig.~\ref{fig:interface} shows the interface
+of the program on the Raspberry Pi during development.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig09_interface.png}
+    \caption{Program interface on the Raspberry Pi during development.
+    (a) Binary mask of the ball after the HSV threshold. (b) Main window:
+    plate contour (green), detected ball (red circle) with its centroid
+    (blue) and position in cm (\textit{PLATO DETECTADO}: plate detected).
+    (c) Mask of the white plate used by the plate-detection option; the
+    hole corresponds to the ball.}
+    \label{fig:interface}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{FOTOS/Fig08_color_detection.png}
+    \caption{Color segmentation of the ball, reproduced offline on a frame
+    of the test video with the same thresholds and filters as the
+    program. (a) True colors, (b) image as interpreted by the program
+    (R and B channels swapped by the RGB888 memory order), (c) HSV
+    threshold alone, (d) threshold restricted to the fixed plate region
+    and shape filters; the detected contour has a circularity of 0.90.}
+    \label{fig:color}
+\end{figure}
+
+\textbf{Shape filters.} After a light morphological opening and closing
+($3\times3$) and a median filter, each candidate contour must satisfy:
+an equivalent diameter within $\pm35\,\%$ of the ball diameter (learned
+automatically from the first detections), a circularity
+$4\pi A/P^2 \geq 0.55$, a ratio between its area and that of its
+minimum enclosing circle $\geq 0.55$, a centroid inside the plate, and
+a distance to the previous detection below 5~cm. These filters reject a
+hand or fingers entering the plate and isolated pixels. If the ball is
+lost for a few frames, the last position is kept for up to 4 frames;
+after 0.25~s without the ball, the plate returns to level.
+
+\subsection{Plate orientation sensing}
+The MPU-6500 combines a three-axis accelerometer and a three-axis
+gyroscope; its datasheet specifies accelerometer full-scale ranges from
+$\pm 2$~g to $\pm 16$~g and I2C communication at up to 400~kHz
+\cite{MPU6500}. The IMU is fixed to the plate and is read at 200~Hz.
+The inclination is obtained from the direction of gravity measured by
+the accelerometer \cite{Pedley2013}. This estimate is correct only when
+the sensor is not accelerating: any linear acceleration of the robot
+adds to gravity and appears as a false inclination \cite{Pedley2013}.
+The program checks the validity of every reading (frozen values,
+communication errors, angles above $25^\circ$) and restarts the IMU
+automatically when it fails. Its zero is stored with the plate leveled.
+In the final configuration the IMU is used only for calibration: to
+store the leveled position of the plate and to identify the gain $G$
+(Section~\ref{sec:platform}). It is not used in the control loop, for
+the reasons given in Section~\ref{sec:imu}.
+
+\subsection{Design advantages}
+\begin{itemize}
+    \item \textbf{Modularity:} the mobile base and the balancing platform
+    have separate processors and power supplies, so they can be tested
+    and calibrated independently before integration.
+    \item \textbf{Reproducibility:} the structure uses standard TETRIX
+    parts and three simple 3D-printed parts, and all electronic modules
+    are commercial.
+    \item \textbf{Recovery routines:} the software includes automatic
+    recovery routines for camera, IMU and I2C communication failures, and
+    restarts the control loop after an unexpected error
+    (Table~\ref{tab:faults}). These routines improve operational
+    resilience, although they were not evaluated with systematic
+    fault-injection tests.
+    \item \textbf{Built-in data logging:} every control cycle is recorded
+    (measured and estimated position, velocity, reference, commanded and
+    measured tilt, servo angles, PWM and frame rate), and the results can
+    be exported as plots for analysis.
+\end{itemize}
+
+\section{Control strategy}
+\label{sec:control}
+
+Fig.~\ref{fig:control} shows the two control loops, each organized as
+reference, controller, actuator and plant, and sensor. They run on
+different processors and are coupled only through the enable line and
+the position display. The ball-and-plate loop uses only the camera as
+feedback; the IMU is not part of the loop (Section~\ref{sec:imu}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig06_control_architecture.png}
+    \caption{Control architecture, grouped as reference (yellow),
+    controller (blue), actuator and plant (orange) and sensor (purple).
+    (a) Ball-and-plate loop on the Raspberry Pi 4B: LQR with integral
+    action on the camera measurement, one loop per axis. (b) Mobile base
+    loop on the NI myRIO: proportional position law, differential-drive
+    inverse kinematics and a PD speed loop per wheel.}
+    \label{fig:control}
+\end{figure}
+
+\subsection{Ball model}
+For small plate inclinations, a solid ball rolling without slipping on
+the plate obeys, on each axis \cite{Awtar2002,Hauser1992},
+\begin{equation}
+\ddot{x} = \frac{5}{7}\, g \sin\theta \approx b\,\theta ,
+\qquad b = \frac{5}{7}\,g\,\frac{\pi}{180} = 12.2~\mathrm{cm\,s^{-2}\,deg^{-1}},
+\label{eq:ball}
+\end{equation}
+where $x$ is the ball position along the axis (cm), $g$ the gravity
+acceleration (981~cm/s$^2$), $\theta$ the plate inclination (degrees)
+and $b$ the gain between inclination and acceleration. The value of $b$
+identified from the logged data was $8.0$~cm\,s$^{-2}$\,deg$^{-1}$,
+lower than the theoretical value. The difference is attributed to
+rolling friction and to the uncertainty of the gain $G$ that converts
+plate angle into servo angle; the identified value was used for the
+controller and the estimator. Defining the state
+$\mathbf{z}=[e,\;v]^T$, where $e=x-r$ is the position error with
+respect to the reference $r$ and $v=\dot x$ the velocity,
+Eq.~\eqref{eq:ball} becomes a double integrator:
+\begin{equation}
+\dot{\mathbf{z}} = A\mathbf{z} + B\theta,\qquad
+A=\begin{bmatrix}0&1\\0&0\end{bmatrix},\quad
+B=\begin{bmatrix}0\\ b\end{bmatrix}.
+\label{eq:ss}
+\end{equation}
+
+\subsection{LQR controller with integral action}
+\label{sec:lqr}
+The tilt is computed with the state-feedback law $\theta=-K\mathbf{z}$,
+$K=[k_1,\;k_2]$, that minimizes the quadratic cost
+\begin{equation}
+J=\int_0^\infty\left(\mathbf{z}^TQ\mathbf{z}+R\,\theta^2\right)dt ,
+\label{eq:cost}
+\end{equation}
+where $Q=\mathrm{diag}(q_1,q_2)$ weights the position and velocity
+errors and $R$ the control effort \cite{Anderson1990}. For the double
+integrator of Eq.~\eqref{eq:ss} with $R=1$, the algebraic Riccati
+equation has the closed-form solution
+\begin{equation}
+k_1=\sqrt{q_1},\qquad
+k_2=\sqrt{\frac{2\sqrt{q_1}}{b}+q_2} .
+\label{eq:gains}
+\end{equation}
+The resulting closed loop is $\ddot e + b k_2\,\dot e + b k_1\,e = 0$,
+with natural frequency $\omega_n=\sqrt{b k_1}$ and damping ratio
+$\zeta=b k_2/(2\omega_n)$. Therefore, $q_1$ is chosen as
+$(\omega_n^2/b)^2$ to place $\omega_n$ directly, and $q_2$ adds damping.
+
+\textbf{Choice of the weights.} A preliminary tuning with
+$\omega_n=5$~rad/s ($k_1=3.13^\circ$/cm, $k_2=0.94^\circ\cdot$s/cm) was
+used in the bench tests of Section~\ref{sec:bench}. It produced fast
+responses but large servo activity (Fig.~\ref{fig:servo}). For the final
+tests the bandwidth was reduced to $\omega_n=3$~rad/s with $q_2=0.1$,
+which gives
+\begin{equation}
+k_1=1.12~^\circ/\mathrm{cm},\qquad k_2=0.62~^\circ\cdot\mathrm{s/cm},
+\qquad \zeta = 0.83,\qquad t_s\approx\frac{4}{\zeta\omega_n}=1.6~\mathrm{s},
+\label{eq:final}
+\end{equation}
+where $t_s$ is the theoretical 2\,\% settling time. This choice
+balances three limits of the hardware: the delay of the camera
+(about 0.1~s, which reduces the phase margin at high bandwidth), the
+limited tilt range of the linkage ($\approx9^\circ$ on X,
+Section~\ref{sec:platform}), and the wear of the servos. With
+$k_1=1.12^\circ$/cm, a 5~cm error requests $5.6^\circ$, within the
+$\pm10^\circ$ limit, so the controller stays linear for most of the
+plate. The damping $\zeta=0.83$ avoids large overshoots. The
+implemented law adds four practical features:
+\begin{enumerate}
+    \item \textbf{Integral action} $-K_i\int e\,dt$ with
+    $K_i=1.5~^\circ/(\mathrm{cm\cdot s})$, to remove steady-state errors
+    due to leveling errors of the plate or to a slope. It is integrated
+    only when $|e|<4$~cm and the output is not saturated, and it is
+    frozen (not reset) otherwise. This conditional integration prevents
+    windup \cite{Astrom2021}. Its contribution is limited to $3^\circ$.
+    \item \textbf{Dead zones} of 0.4~cm on the error and 1~cm/s on the
+    velocity, so the servos do not follow the noise of the measurement
+    near the reference.
+    \item \textbf{Limited approach speed}: the law is written as a
+    velocity reference $v_d=-\mathrm{sat}(k_1e/k_2,\;30~\mathrm{cm/s})$
+    and $\theta=-k_2(v-v_d)$, which is equivalent to the LQR law for
+    small errors and avoids violent movements for large ones.
+    \item \textbf{Saturation} of the commanded tilt at $\pm10^\circ$.
+\end{enumerate}
+With these features, the tilt commanded on each axis is
+\begin{equation}
+\theta_d=\mathrm{sat}_{\pm10^\circ}\!\left[-k_2\,(v_p-v_d)-\mathrm{sat}_{\pm3^\circ}\!\left(K_i\!\int e_{dz}\,dt\right)\right],
+\qquad
+v_d=-\mathrm{sat}_{\pm30}\!\left(\frac{k_1}{k_2}\,e_{dz}\right),
+\label{eq:law}
+\end{equation}
+where $e_{dz}$ is the position error after the 0.4~cm dead zone and
+$v_p$ the predicted velocity of Section~\ref{sec:kalman}. For small
+errors Eq.~\eqref{eq:law} reduces to $\theta_d=-k_1e-k_2v-K_i\int e\,dt$.
+The commanded servo angle is
+\begin{equation}
+\delta = \delta_0 + s\,\frac{\theta}{G},
+\label{eq:servo}
+\end{equation}
+where $\delta_0$ is the leveled servo angle, $s=\pm1$ the direction of
+the axis and $G$ the identified plate/servo gain. Its rate of change is
+limited to $150^\circ$/s near the reference and $300^\circ$/s for large
+errors, and changes below $0.3^\circ$ are not sent, to reduce wear.
+
+\subsection{State estimation and delay compensation}
+\label{sec:kalman}
+The velocity is not measured; it is estimated with an independent
+Kalman filter per axis \cite{Kalman1960,BarShalom2001} based on
+Eq.~\eqref{eq:ball}, with the state $\mathbf{x}=[x,\;v]^T$, the
+commanded tilt as input and the position measured by the camera as
+output. With the sampling period $\Delta t$ of each frame
+($\approx1/60$~s), the model and the filter are
+\begin{equation}
+\begin{gathered}
+A_d=\begin{bmatrix}1&\Delta t\\0&1\end{bmatrix},\quad
+B_d=\begin{bmatrix}\Delta t^2/2\\ \Delta t\end{bmatrix}b,\quad
+H=\begin{bmatrix}1&0\end{bmatrix},\quad
+Q_k=\sigma_a^2\begin{bmatrix}\Delta t^4/4&\Delta t^3/2\\ \Delta t^3/2&\Delta t^2\end{bmatrix},\quad
+R_k=\sigma_m^2,\\[1mm]
+\text{prediction:}\quad
+\hat{\mathbf{x}}_{k|k-1}=A_d\hat{\mathbf{x}}_{k-1}+B_d\theta_{k-1},\qquad
+P_{k|k-1}=A_dP_{k-1}A_d^T+Q_k,\\[1mm]
+\text{update:}\quad
+K_k=\frac{P_{k|k-1}H^T}{HP_{k|k-1}H^T+R_k},\quad
+\hat{\mathbf{x}}_{k}=\hat{\mathbf{x}}_{k|k-1}+K_k\left(z_k-H\hat{\mathbf{x}}_{k|k-1}\right),\quad
+P_k=(I-K_kH)P_{k|k-1},
+\end{gathered}
+\label{eq:kalman}
+\end{equation}
+where $z_k$ is the position measured by the camera, $P$ the error
+covariance, $Q_k$ the covariance of the process noise, modeled as a
+white acceleration of $\sigma_a=30$~cm/s$^2$, and $R_k$ the covariance
+of the measurement noise, with $\sigma_m=0.15$~cm. The filter is
+initialized when the ball is first detected, with
+$\hat{\mathbf{x}}_0=[z_0,\;0]^T$ and
+$P_0=\mathrm{diag}(1~\mathrm{cm}^2,\;100~\mathrm{cm^2/s^2})$.
+Measurements that differ by more than 6~cm from the
+prediction are rejected (gating); after five consecutive rejections
+the filter is reinitialized with the new measurement. When the innovation exceeds 1.2~cm,
+which indicates an external push, the process noise is multiplied by 8
+for 0.3~s so that the filter adapts quickly. The acquisition and
+processing of the image introduce a delay of about $\tau=0.1$~s. To
+compensate it, the controller uses a prediction $\tau$ ahead,
+$x_p=\hat x+\hat v\tau+\tfrac12 b\theta\tau^2$ and $v_p=\hat
+v+b\theta\tau$, following the idea of predictor compensation of dead
+time \cite{Smith1957}.
+
+\subsection{Why the IMU is not used in the control loop}
+\label{sec:imu}
+An inner loop that corrected the servo command with the inclination
+measured by the IMU was implemented and tested, but it is not used in
+the final configuration, for three reasons. First, the IMU measures the
+inclination of the plate with respect to gravity, which on the ramp
+includes the $10^\circ$ of the terrain; cancelling it would require a
+correction of about $10^\circ/G_Y\approx33^\circ$ of servo rotation on
+Y, the direction of motion, far beyond the $5^\circ$ trim range of that
+loop, which saturated and switched off every time the robot climbed the
+ramp. Second, the
+accelerations of the robot when it starts, stops, turns or enters the
+ramp add to gravity in the accelerometer and are read as false
+inclinations \cite{Pedley2013}. Third, the camera is fixed to the same
+chassis as the plate, so it measures the ball directly in the frame of
+the plate. Three angles must be distinguished along the direction of
+motion: the slope of the terrain $\alpha$ (chassis with respect to the
+horizontal), the tilt of the plate with respect to the chassis $\theta$
+(the variable commanded by the controller through the servos) and the
+tilt of the plate with respect to gravity, $\theta+\alpha$, which is
+what the IMU measures and what accelerates the ball. Since the camera
+reads positions in the plate frame and the controller acts on $\theta$,
+the slope only appears as a constant disturbance $b\alpha$
+in Eq.~\eqref{eq:ball}, and it is
+compensated by the proportional and integral terms of the LQR. The
+residual offset that remains on the ramp is analyzed in
+Section~\ref{sec:ramp}.
+
+\subsection{Mobile base control}
+The mobile base is controlled with a LabVIEW program on the NI myRIO.
+The encoders give the angular velocities of the wheels, from which the
+pose of the robot is obtained by odometry \cite{Siegwart2011}. The
+longitudinal position error is $e_x = x_d - x$, and the reference linear
+velocity is
+\begin{equation}
+v_{\mathrm{ref}} =
+\begin{cases}
+\mathrm{sat}(K_p e_x), & |e_x| > \varepsilon \\[1mm]
+0, & |e_x| \leq \varepsilon
+\end{cases}
+\end{equation}
+with $K_p = 0.40$~s$^{-1}$ and $\varepsilon = 0.01$~m. The velocity limit
+was set to $\pm 0.10$~m/s in the ball-balancing runs; a higher limit of
+0.15~m/s was used only in the wheel-speed characterization of
+Section~\ref{sec:wheel}. The low speed limit reduces the accelerations
+transmitted to the ball. The angular velocity reference is zero during
+longitudinal displacement. The differential-drive inverse kinematics
+gives the wheel speed references \cite{Siegwart2011}:
+\begin{equation}
+\omega_R = \frac{v_{\mathrm{ref}} + \frac{L}{2}\omega_{\mathrm{ref}}}{r},
+\qquad
+\omega_L = \frac{v_{\mathrm{ref}} - \frac{L}{2}\omega_{\mathrm{ref}}}{r},
+\end{equation}
+where $L$ is the distance between the driving wheels and $r$ the wheel
+radius, $L=0.33$~m and $r=0.051$~m. Each wheel speed is regulated
+by a PD controller \cite{Astrom2021}. The LabVIEW PID block uses the
+standard form
+\begin{equation}
+u(t)=K_c\left[e_\omega(t)+\frac{1}{T_i}\int e_\omega\,dt+T_d\,\frac{de_\omega}{dt}\right],
+\label{eq:pidlv}
+\end{equation}
+with $T_i$ and $T_d$ entered in minutes in LabVIEW,
+$e_\omega=\omega_{\mathrm{ref}}-\omega$ and $u$ the PWM duty cycle in
+percent. The selected tuning (test PD-03, Section~\ref{sec:wheel}) uses
+no integral action. Mathematically this corresponds to
+$T_i\to\infty$; in the LabVIEW PID block it is configured by entering
+$T_i=0$, a software convention that disables the integral term. The
+implemented law is therefore the PD controller
+\begin{equation}
+u(t)=K_c\left[e_\omega(t)+T_d\,\frac{de_\omega}{dt}\right],
+\qquad K_c=0.80~\%\cdot\mathrm{s/rad},\quad
+T_d=0.010~\mathrm{min}=0.6~\mathrm{s},
+\label{eq:pd}
+\end{equation}
+for both wheels. Its output is the PWM duty cycle and direction sent to the MDD10A. The feedback on wheel speed compensates the difference
+between the two motors and the increase of load when the robot climbs
+the ramp. The LabVIEW front panel shows the wheel
+velocities, the pose and trajectory of the robot, and the position of
+the ball received through UART.
+
+\section{Design files summary}
+
+The mechanical design combines commercial TETRIX components with three
+custom 3D-printed parts: the plate, its central support and the
+connecting rods. TETRIX was used for the chassis, the camera mast
+and the links of the mechanism because its modular geometry allowed the
+structure to be modified during development without permanent joints.
+Additive manufacturing was used for these parts, whose geometry could
+not be built with standard TETRIX parts.
+
+\begin{table}[H]
+\centering
+\caption{Design files produced by the authors. Files marked ``GitHub'' are in the source file repository; the videos are on Google Drive.}
+\label{tab:files_own}
+\small
+\begin{tabularx}{\textwidth}{|L{0.33\textwidth}|L{0.16\textwidth}|L{0.12\textwidth}|Y|}
+\hline
+\textbf{Design filename} & \textbf{File type} & \textbf{License} & \textbf{Location of the file} \\
+\hline
+TODITO.f3z (complete assembly) & Fusion 360 archive & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+BALL N PLATE, PLATE, CAMARA, BASEDSM, BASE POSTERIOR & Fusion 360 (inside the archive) & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Central support of the plate & STL / STEP & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+39100\_TXM-Axle Spacers 1/8", 39101\_TXM-Axle Spacers & STEP & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Control10-3\_v7\_UART.py & Python 3 & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+enlace\_myrio.py, mpu.py, exportar\_resultados.py & Python 3 & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Mobile base program & LabVIEW VI & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Connection diagram (Fig.~\ref{fig:wiring}) & PNG & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+log\_control\_10.csv (flat floor), log\_control\_11.csv (ramp) & CSV, semicolon-separated & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+analisis\_resultados.py (metrics and plots of Section~\ref{sec:validation}) & Python 3 & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+PD\_01, PD\_03\_P1--P3, PD2\_04\_1--3, PD2\_05\_1--3, PD2\_10, PD\_AGRESIVO, PID\_integral\_suave(\_en\_rampa) (wheel-speed tests) & CSV, comma-separated, 14 columns & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Valores\_PID\_Datos\_\allowbreak correspondientes.pdf (gains of each test) & PDF & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+pid\_metrics.py, pid\_figs.py (metrics and plots of Section~\ref{sec:wheel}) & Python 3 & GPL-2.0 & \href{https://github.com/alexsv315-lang/Vision-Based-Mobile-Ball-and-Plate-System}{GitHub} \\ \hline
+Video 1: ramp climb & MP4 & GPL-2.0 & \href{https://drive.google.com/file/d/12MyZ74ZD0Io3IhAB6Xtw1eezuV8RvqDj/view?usp=sharing}{Google Drive} \\ \hline
+Video 2: reverse motion & MP4 & GPL-2.0 & \href{https://drive.google.com/file/d/1ND7cfqTfeYYMZg7W4a4FlZ_xd6O5o8VT/view?usp=sharing}{Google Drive} \\ \hline
+\end{tabularx}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{TODITO.f3z} contains the complete assembly of
+    Fig.~\ref{fig:proto_cad}, including the TETRIX parts, the
+    electronic modules and the custom parts (plate, central support and
+    connecting rods).
+    \item \textbf{Control10-3\_v7\_UART.py} is the balancing program
+    (vision, Kalman filter, LQR, inner loop, PCA9685 driver, logging). It
+    needs \texttt{enlace\_myrio.py} (UART and enable line, Table~\ref{tab:link}),
+    \texttt{mpu.py} (IMU driver) and \texttt{exportar\_resultados.py}
+    (plots of the logged data) in the same folder.
+    \item \textbf{log\_control\_10.csv} and \textbf{log\_control\_11.csv}
+    are the raw logs of the tests of Section~\ref{sec:validation}, recorded
+    by the balancing program at about 60 rows per second (time, measured
+    and estimated position, velocity, reference, commanded tilt, servo
+    angles, PWM and frame rate).
+    \item The videos show the integrated robot climbing the $10^\circ$ ramp
+    and moving in reverse with the ball balanced on the plate.
+\end{itemize}
+
+The TETRIX models used in the assembly are listed in
+Table~\ref{tab:design_files}; they are proprietary and can be downloaded
+from the manufacturer.
+
+\begin{table}[H]
+\centering
+\caption{TETRIX design files used in the prototype.}
+\label{tab:design_files}
+\small
+\begin{tabularx}{\textwidth}{|L{0.33\textwidth}|L{0.08\textwidth}|L{0.28\textwidth}|Y|}
+\hline
+\textbf{Design filename} & \textbf{Type} & \textbf{License} & \textbf{Location} \\
+\hline
+39068\_TXM-288mmChannel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-channels}{TETRIX} \\ \hline
+39073\_TXM-FlatBuilding Plates & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-flat-building-plates}{TETRIX} \\ \hline
+39065\_TXM-32mmChannel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-channels}{TETRIX} \\ \hline
+39089\_TXM-MotorMount & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-motor-mount}{TETRIX} \\ \hline
+44260\_TXM TorqueNADO DC Motor & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-max-torquenado-motor-with-encoder}{TETRIX} \\ \hline
+39055\_TXM-4 inch Wheel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-wheels}{TETRIX} \\ \hline
+39079\_TXM-Motor Shaft Hub with Set Screw & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-motor-hub}{TETRIX} \\ \hline
+39091\_TXM-Bronze Bushing & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-max-11-mm-bronze-bushing}{TETRIX} \\ \hline
+36466\_TXM-4 inch Omni Wheel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-omni-wheel-packs}{TETRIX} \\ \hline
+39067\_TXM-160mmChannel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-channels}{TETRIX} \\ \hline
+39274\_TXM-Flat64mmx26mm & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-flats}{TETRIX} \\ \hline
+39281\_TXM-InsideCornerBrackets & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-inside-corner-brackets}{TETRIX} \\ \hline
+39273\_TXM-Flat96mmx26mm & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-flats}{TETRIX} \\ \hline
+39070\_TXM-288mm Flat Bar & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-flat-bars}{TETRIX} \\ \hline
+39066\_TXM-96mmChannel & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-channels}{TETRIX} \\ \hline
+39272\_TXM-Flat160mmx26mm & STEP & Proprietary (Pitsco / TETRIX) & \href{https://www.pitsco.com/products/tetrix-flats}{TETRIX} \\ \hline
+\end{tabularx}
+\end{table}
+
+All project files are also available in this
+\href{https://drive.google.com/drive/folders/1bn01djJBaUqpOuXz7pNVUJY4Hojj-HjR?usp=sharing}{shared folder}.
+
+\section{Bill of materials summary}
+
+All costs are expressed in USD, rounded to whole dollars. Prices in
+Peruvian soles were converted using an exchange rate of S/~3.39 per USD.
+The TETRIX MAX structural and motion components are grouped into a
+single line item corresponding to the complete TETRIX MAX set.
+
+{\footnotesize
+\begin{longtable}{|L{2.0cm}|L{3.6cm}|L{0.8cm}|L{1.6cm}|L{1.6cm}|L{2.6cm}|L{2.4cm}|}
+\caption{Bill of materials.}\label{tab:bom}\\
+\hline
+\textbf{Designator} & \textbf{Component} & \textbf{Qty.} & \textbf{Cost per unit} & \textbf{Total cost} & \textbf{Source} & \textbf{Material type} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Designator} & \textbf{Component} & \textbf{Qty.} & \textbf{Cost per unit} & \textbf{Total cost} & \textbf{Source} & \textbf{Material type} \\
+\hline
+\endhead
+TETRIX MAX & TETRIX MAX complete set (structure, DC motors with encoders, wheels, 12~V NiMH battery) & 1 & USD 679 & USD 679 & Pitsco / TETRIX & Metal / Electromechanical \\ \hline
+myRIO & NI myRIO-1900 embedded controller & 1 & USD 430 & USD 430 & National Instruments & Electronic \\ \hline
+RPi 4B & Raspberry Pi 4 Model B (4~GB) & 1 & USD 144 & USD 144 & Raspberry Pi / supplier & Electronic \\ \hline
+BAT2 & Custom 12~V, 8~Ah lithium-ion battery pack & 1 & USD 34 & USD 34 & Local supplier & Lithium-ion \\ \hline
+MDD10A & Dual-channel 10~A DC motor driver & 1 & USD 26 & USD 26 & Cytron & Electronic \\ \hline
+MG996R & Servomotor & 2 & USD 7 & USD 14 & Local supplier & Electromechanical \\ \hline
+XL4016-S & 8~A buck converter module, set to 7.0~V (servos) & 1 & USD 7 & USD 7 & Local supplier & Electronic \\ \hline
+XL4016-M & 8~A buck converter module, set to 10~V (myRIO) & 1 & USD 7 & USD 7 & Local supplier & Electronic \\ \hline
+PLATE & Plate $20\times20$~cm (3D-printed) & 1 & USD 14 & USD 14 & 3D printing & PLA \\ \hline
+PCA9685 & 16-channel PWM servo driver & 1 & USD 12 & USD 12 & Local supplier & Electronic \\ \hline
+IMU & MPU-6500 inertial sensor (module sold as ``MPU-9250/6500'') & 1 & USD 10 & USD 10 & Local supplier & Electronic \\ \hline
+CAM & Camera module Rev.~1.3 (OV5647) & 1 & USD 7 & USD 7 & Local supplier & Electronic \\ \hline
+XL4015 & 5~A buck converter module (Raspberry Pi) & 1 & USD 6 & USD 6 & Local supplier & Electronic \\ \hline
+FFC & CSI flat flex cable, 15 to 22 pins & 1 & USD 4 & USD 4 & Local supplier & Polymer / copper \\ \hline
+SUP & Central support of the plate (3D-printed) & 1 & USD 3 & USD 3 & 3D printing & PLA \\ \hline
+BALL & Orange ball, 3~cm diameter & 1 & USD 1 & USD 1 & Local supplier & Polymer \\ \hline
+\multicolumn{4}{|r|}{\textbf{Total project cost}} & \multicolumn{3}{l|}{\textbf{USD 1,398}} \\
+\hline
+\end{longtable}
+}
+\noindent{\small Prices as of November 2026; local prices were converted from soles (PEN) and rounded to whole dollars. The TETRIX MAX set includes the structural parts, DC motors with encoders, wheels and 12~V NiMH battery listed in Table~\ref{tab:design_files}. Wires, connectors, jumper cables and fasteners outside the TETRIX set are not included in the total.}
+
+
+\section{Build instructions}
+
+\textbf{Tools and materials.} FDM 3D printer and PLA filament (plate,
+central support and rods), TETRIX hex keys and wrenches, screwdrivers,
+digital multimeter, soldering iron and heat-shrink tubing for the power
+wiring, jumper wires for the logic signals, cable ties, and a computer
+with Fusion 360, LabVIEW (with the myRIO module) and SSH access to the
+Raspberry Pi. The files for each step are listed in
+Tables~\ref{tab:files_own} and~\ref{tab:design_files}.
+
+\textbf{Safety.} Disconnect both batteries while assembling and wiring.
+Set the output voltage of the buck converters before connecting any
+load. Keep fingers away from the cranks and rods when the servos are
+powered: the servos can move suddenly when the program starts or when
+the ball is detected.
+
+\subsection{Mobile base}
+\begin{enumerate}
+    \item Assemble the rectangular chassis with TETRIX channels, flats and
+    inside corner brackets, joined with screws and nuts
+    (Table~\ref{tab:design_files}).
+    \item Mount the two DC motors with their motor mounts at the rear,
+    attach the 4-inch wheels with motor shaft hubs, and install the two
+    omni wheels at the front with axles, bronze bushings and spacers.
+    \item Build the camera mast with two vertical channels and a diagonal
+    brace, and fix the camera bracket and the Raspberry Pi at the top
+    (Fig.~\ref{fig:proto_cad}). The camera must look down at the center
+    of the plate with the whole plate inside the image.
+    \item Fix the myRIO, the MDD10A and the batteries on the chassis,
+    keeping the center of mass low and between the axles.
+\end{enumerate}
+
+\subsection{Ball-and-plate mechanism}
+\begin{enumerate}
+    \item Print the plate, the central support and the connecting rods in
+    PLA with 50\,\% infill and the default settings of a standard FDM
+    slicer (0.2~mm layer height, two walls). Print each part on its
+    largest flat face: the plate flat, with its top surface smoothed
+    (sanded) so that the ball rolls without bumps; the rods lying flat;
+    and the central support standing on its base. Fix the base of the central support to the chassis, below the
+    center of the camera image, and attach the plate to its spherical
+    joint so that it rotates freely in all directions.
+    \item Fix the two servos to the chassis, one under the X axis and one
+    under the Y axis of the plate (Fig.~\ref{fig:mech}).
+    \item Before mounting the servo horns, power the servos and command
+    the leveled positions defined in the program (about $101^\circ$ for
+    X and $97^\circ$ for Y in the final assembly) with keys J/L and I/K of
+    the program or with a servo tester. Mount the horns
+    (cranks) in that position.
+    \item Connect each crank to the underside of the plate with its
+    connecting rod. Adjust the length of the rods so that the plate is
+    level with the servos in the leveled position, and check that the
+    articulated ends move without binding or noticeable clearance.
+    \item Move each servo through its range and verify that the plate
+    tilts without collisions between the rods, the plate and the chassis.
+    \item Fix the IMU flat on the underside of the plate, aligned with
+    the X and Y axes.
+\end{enumerate}
+
+\subsection{Electronics and wiring}
+Follow Fig.~\ref{fig:wiring}.
+\begin{enumerate}
+    \item Connect the 12~V battery of the platform to the XL4015 and the
+    XL4016. With no load, adjust the XL4015 to 5.1~V and the XL4016 to
+    7.0~V with a multimeter.
+    \item Connect the XL4015 output to the 5~V and GND pins of the
+    Raspberry Pi, and the XL4016 output to the V+ terminal of the
+    PCA9685.
+    \item Connect the PCA9685 and the IMU to the I2C pins of the
+    Raspberry Pi (SDA, SCL, 3.3~V, GND). Connect servo Y to channel 1
+    and servo X to channel 2 of the PCA9685.
+    \item Connect the camera to the CSI port with the flat flex cable
+    (contacts facing the correct side of each connector).
+    \item Connect the motors to the MDD10A, the MDD10A PWM/DIR inputs and
+    the encoders to the myRIO, and the 12~V NiMH battery to the MDD10A and
+    to the second XL4016, adjusted beforehand to 10~V, which powers the
+    myRIO.
+    \item Connect the UART line, the enable line and the common ground
+    between the Raspberry Pi and the MXP connector A of the myRIO
+    following Table~\ref{tab:link}. A 10~k$\Omega$ resistor from GPIO27 to
+    GND is recommended (Section~\ref{sec:power}).
+    \item On the Raspberry Pi, run \texttt{sudo raspi-config} and, in
+    \textit{Interface Options / Serial Port}, disable the login shell and
+    enable the serial hardware; add \texttt{dtoverlay=disable-bt} to
+    \texttt{/boot/firmware/config.txt} and reboot.
+    \item In the LabVIEW program of the myRIO, configure the UART of
+    connector A (VISA resource of connector A) at 115200~baud, 8 data bits,
+    no parity, one stop bit, with the termination character enabled and
+    set to 0x0A. In the loop, read a line with \textit{VISA Read} and
+    convert it with \textit{Scan From String} using the format
+    \texttt{\%.;\%f;\%f;\%d} (the code \texttt{\%.;} forces the point as
+    decimal separator). Write the enable button to connector A DIO1 with a
+    digital output.
+\end{enumerate}
+
+\subsection{Verification}
+Before operation, check the items of Table~\ref{tab:checks}.
+
+\begin{table}[H]
+\centering
+\caption{Verification checklist after assembly.}
+\label{tab:checks}
+\small
+\begin{tabularx}{\textwidth}{@{}L{5.2cm}Y@{}}
+\toprule
+\textbf{Check} & \textbf{Expected result} \\
+\midrule
+Converter outputs (no load) & XL4015: 5.1~V; XL4016 (servos): 7.0~V; XL4016 (myRIO): 10~V \\
+Mechanism & Plate level with the servos at their leveled positions; free tilt without collisions \\
+Wheels and motors & Free rotation; both wheels turn forward with a positive command from LabVIEW \\
+Camera & Whole plate visible in the image; ball detected (key M shows a single round blob) \\
+IMU & Inclination close to $0^\circ$ with the plate leveled \\
+UART link & Ball position appears on the LabVIEW front panel \\
+Enable line & The program shows CONTROL: ON when the LabVIEW button is switched ON \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Operation instructions}
+\label{sec:operation}
+
+\subsection{Software installation}
+On the Raspberry Pi (Raspberry Pi OS), enable the camera and the I2C
+interface, and install Python~3 with \texttt{picamera2}, \texttt{opencv},
+\texttt{numpy}, \texttt{smbus2}, \texttt{pyserial} and
+\texttt{gpiozero}. The experiments used a Raspberry Pi 4 Model B (4~GB) with Raspberry Pi
+OS and the versions of Python~3, OpenCV and Picamera2 available in its
+package repositories in November 2026, and LabVIEW with the myRIO
+module on the NI myRIO. Since exact version numbers were not recorded,
+users should record them with \texttt{pip list} and keep them fixed when
+reproducing the results. Copy the four Python files of
+Table~\ref{tab:files_own} to the same folder. Load the LabVIEW program
+into the myRIO.
+
+\subsection{Start-up and calibration}
+\begin{enumerate}
+    \item Place the robot on a level surface, power the mobile base and
+    then the platform.
+    \item Start the LabVIEW program first, with the enable button in
+    OFF. Because GPIO27 has no pull-down resistor, starting the Raspberry
+    Pi program while the myRIO output is not driven could enable the
+    control unintentionally.
+    \item Run \texttt{python3 Control10-3\_v7\_UART.py}. Enter the
+    reference position (Enter twice selects the center of the plate).
+    \item The servos move slowly to the leveled position. The first time
+    (or if the calibration files are missing), the program stores the
+    zero of the IMU and identifies the gains $G$ automatically. The
+    plate must be empty during this step (about 15~s).
+    \item The program fixes the plate region automatically when its
+    corners are stable, or loads the corners saved in
+    \texttt{plato\_fijo.json}. If the plate is not well framed, press B
+    and click the four corners. Verify the detection of the ball with
+    key M (binary mask) and adjust the HSV sliders if the lighting
+    changes.
+\end{enumerate}
+
+\subsection{Operation}
+\begin{enumerate}
+    \item Place the ball on the plate and enable the control with the
+    myRIO digital line (ON), or with key C. The display shows the state,
+    the frame rate, the measured and estimated position, the servo
+    commands and the IMU state.
+    \item The reference can be changed with a click on the image or with
+    keys W/A/S/D (1~cm steps). Keys 1--8 change the bandwidth, damping,
+    $K_i$ and dead zone during operation; P prints all parameters.
+    \item Start the motion of the mobile base from the LabVIEW front panel.
+    The ball position received through UART is plotted on the panel.
+\end{enumerate}
+
+\subsection{Shutdown}
+Disable the control from LabVIEW (button OFF) or with key C: the plate
+returns to level. Press Q to exit the Raspberry Pi program, and only
+then stop the LabVIEW program; the program levels the plate and exports the
+logged data and plots to \texttt{resultados/<date\_time>/}. Stop the
+mobile base, then disconnect the platform battery and the base battery.
+
+\textbf{Reading the results.} The window of the program shows the
+state of the control, the frame rate, the measured and estimated
+position (cm), the velocity (cm/s), the servo angles and PWM ($\mu$s)
+and the LQR gains. The LabVIEW front panel shows the pose and velocity
+of the robot and the ball position received through UART. After each
+session, the log \texttt{log\_control.csv} and the plots exported to
+\texttt{resultados/} can be analyzed with the metrics of
+Section~\ref{sec:validation}.
+
+\textbf{Behavior under faults.} Table~\ref{tab:faults} summarizes how
+the software reacts to the most common faults. These reactions are
+implemented in the code but were not tested systematically.
+
+\begin{table}[H]
+\centering
+\caption{Reaction of the system to faults (as implemented in the code).}
+\label{tab:faults}
+\small
+\begin{tabularx}{\textwidth}{@{}L{4.4cm}Y@{}}
+\toprule
+\textbf{Fault} & \textbf{Reaction} \\
+\midrule
+Ball not detected in a frame & The last position is kept for up to 4 frames; after 0.25~s without the ball the plate returns to level \\
+Outlier measurement (jump $>6$~cm) & Rejected by the Kalman gating; after 5 consecutive rejections the filter restarts at the new position \\
+UART link lost & A warning is printed and the balancing loop continues, since it runs entirely on the Raspberry Pi; only the plot in LabVIEW is lost \\
+Enable line set to OFF & The control is disabled and the plate returns to level \\
+Camera, IMU or I2C error & The program retries the communication automatically; I2C errors are counted and reported \\
+Restart of the myRIO & GPIO27 floats without a pull-down; follow the start-up order of this section \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Operating limits.} Table~\ref{tab:limits} lists the conditions
+under which the prototype was validated.
+
+\begin{table}[H]
+\centering
+\caption{Operating limits of the prototype.}
+\label{tab:limits}
+\small
+\begin{tabularx}{\textwidth}{@{}L{5.2cm}Y@{}}
+\toprule
+\textbf{Parameter} & \textbf{Limit} \\
+\midrule
+Terrain slope & Up to $10^\circ$ (tested); the plate tilt range ($\approx9^\circ$ on X) limits larger slopes \\
+Base speed & $\leq0.10$~m/s (software limit) \\
+Ball & Orange, 3~cm diameter; another color requires retuning the HSV thresholds \\
+Lighting & Indoor, uniform light; recalibrate HSV if the lighting changes \\
+Reference & At least 2~cm from the edges of the plate \\
+Supplies & Do not exceed 7.2~V on the servos; recharge the batteries before long tests \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Hazards.} Pinch points at the cranks and rods; possible sudden
+servo motion at start-up; loss of the ball from the plate if the base
+accelerates abruptly; heating of the converters during long operation.
+Do not leave the batteries connected unattended.
+
+\section{Validation and characterization}
+\label{sec:validation}
+
+\subsection{Test plan, metrics and acceptance criteria}
+Following the V-model (Fig.~\ref{fig:vmodel}), the prototype was
+validated at three levels: unit tests of the wheel-speed controller of
+the base, integration tests of the platform with the base stopped, and system tests with the robot moving on flat floor and
+on the $10^\circ$ ramp (Table~\ref{tab:plan}). In the platform tests the
+reference was the center of the plate, $(0,0)$, and the Raspberry Pi
+logged every control cycle (about 60 rows per second).
+
+\begin{table}[H]
+\centering
+\caption{Test plan.}
+\label{tab:plan}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.2cm}L{1.0cm}YL{3.0cm}@{}}
+\toprule
+\textbf{Test} & \textbf{Runs} & \textbf{Condition} & \textbf{Controller under test} \\
+\midrule
+Unit (wheel-speed loop) & 14 & Base with the platform, 3~m out-and-back route on flat floor; one run on the $10^\circ$ ramp & Seven PD/PID tunings of the wheel speed \\
+Integration (bench) & 5 & Base stopped; ball released 5.7--8.0~cm from the center & Preliminary, $\omega_n=5$~rad/s \\
+System, flat floor & 3 & Robot moving along a C-shaped path (straight sections and turns) and returning to its start & Final, $\omega_n=3$~rad/s \\
+System, ramp & 4 & Robot climbing and descending the $10^\circ$ ramp, then reversing to its start & Final, $\omega_n=3$~rad/s \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+For each run, the error on each axis was computed as $e_x=\hat x-r_x$
+and $e_y=\hat y-r_y$, where $\hat x,\hat y$ are the estimated positions
+and $r_x, r_y$ the reference, and the distance to the reference as
+$d=\sqrt{e_x^2+e_y^2}$. The metrics are:
+\begin{itemize}
+    \item \textbf{Mean error per axis}: mean of $|e_x|$ and of $|e_y|$.
+    \item \textbf{Mean distance}: mean of $d$; it summarizes in one number
+    how close to the reference the ball stayed.
+    \item \textbf{Maximum distance}: largest value of $d$ during the run.
+    \item \textbf{Time within 2~cm}: percentage of samples with
+    $d<2$~cm. It is used as the \textit{effectiveness} of the regulation.
+\end{itemize}
+Distances are also expressed as a percentage of the plate side (20~cm).
+Two acceptance criteria were defined by the team: (1) the ball must not
+fall from the plate in any run, and (2) the mean distance must be below
+2~cm, that is, 10\,\% of the plate side.
+
+\textbf{Data processing.} The logs of the system tests
+(\texttt{log\_control\_10.csv} and \texttt{log\_control\_11.csv},
+Table~\ref{tab:files_own}) were processed as follows: (1) sessions were
+separated where the time column restarts, because the program was
+restarted between some runs; (2) each run was defined as a continuous
+period with the ball on the plate, delimited by gaps longer than 1~s
+without detection, which correspond to the ball being placed or removed
+by hand between runs; isolated detections of a few rows outside these
+periods (for example, while the ball was being held by hand) were not
+considered runs; (3) 2~s were removed at the start and end of each run;
+(4) in flat run 2, the last 4 minutes, with the robot already stopped
+and the ball still inside the dead zone, were removed so as not to
+improve the result artificially. To check that this processing does
+not bias the metrics, the availability of the vision system was
+computed inside each run: the ball was detected in 100\,\% of the
+frames of all seven runs, and the longest interval between two
+consecutive detections was 0.03~s (two frames). Therefore, no samples
+were removed inside the runs, and the metrics include every instant of
+the regulation. The duration of each run is given in
+Tables~\ref{tab:flat} and~\ref{tab:ramp}. All the tests were carried
+out with a single prototype and a single 3~cm ball.
+
+\subsection{Unit tests: wheel-speed controller of the mobile base}
+\label{sec:wheel}
+\textbf{Procedure.} The base, carrying the platform, followed the same
+route in every test: a 3~m straight segment at $v_{\mathrm{ref}}\le
+0.15$~m/s (above the 0.10~m/s of the balancing runs, to test the loop
+with a larger margin) ($\omega_{\mathrm{ref}}=2.94$~rad/s per wheel), a stop, a
+$180^\circ$ turn in place at 0.3~rad/s and the return to the origin
+(Fig.~\ref{fig:basetraj}). The myRIO logged 14 variables at about 92~Hz: elapsed time; reference
+speed, measured speed and PWM of the right wheel
+(\texttt{wd\_ref}, \texttt{D\_Rad/s}, \texttt{PWM\_D}) and of the left
+wheel (\texttt{wi\_ref}, \texttt{I\_Rad/s}, \texttt{PWM\_I}); the
+odometric pose (\texttt{x}, \texttt{y}, \texttt{theta}); the velocity
+references (\texttt{v\_ref}, \texttt{omega\_ref}); and the distance and
+heading errors (\texttt{rho}, \texttt{e\_theta}) (\texttt{PD\_*.csv}, \texttt{PD2\_*.csv}
+and \texttt{PID\_*.csv}, Table~\ref{tab:files_own}). Seven tunings of
+Eq.~\eqref{eq:pidlv} were tested, first with equal gains on both wheels
+($K_c$ from 0.60 to 1.10), then with different gains per wheel to
+compensate the asymmetry of the motors, and finally with a soft integral
+action ($T_i=1.5$~min $=90$~s). The tuning in use (PD-03) and the asymmetric tunings PD2-04 and
+PD2-05 were repeated three times.
+
+\textbf{Metrics.} During cruise ($v_{\mathrm{ref}}=0.15$~m/s, after
+the first 3~s) the following were computed for each wheel: the mean
+absolute speed error as a percentage of the reference, and the standard
+deviation of the PWM (ripple, an indicator of control effort and motor
+wear). The maximum PWM and the percentage of saturated samples
+($u\ge 99\,\%$) were computed over the whole run. The heading
+deviation is the odometric heading $|\theta|$ at the end of the 3~m
+straight segment; it measures how well the two wheels are matched,
+which is what keeps the platform on a straight path.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of the wheel-speed tunings (mean of the runs;
+$\pm$: standard deviation of 3 runs). $K_c$ is given for the right /
+left wheel; $T_d=0.010$~min unless noted.}
+\label{tab:wheel}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.0cm}L{3.1cm}cYYYc@{}}
+\toprule
+\textbf{Test} & \textbf{Gains} & \textbf{Runs} & \textbf{Speed error [\%]} & \textbf{Heading dev. [$^\circ$]} & \textbf{PWM ripple [\%]} & \textbf{Max PWM [\%]} \\
+\midrule
+PD-01 & $K_c$ 0.60 / 0.60 & 1 & 5.2 & 0.11 & 1.16 & 32 \\
+\textbf{PD-03 (selected)} & $K_c$ 0.80 / 0.80 & 3 & 5.2 & \textbf{0.06 $\pm$ 0.05} & \textbf{1.10} & 36 \\
+PD2-04 & $K_c$ 0.70 / 0.80 & 3 & 5.2 & 0.22 $\pm$ 0.12 & 1.15 & 34 \\
+PD2-05 & $K_c$ 0.80 / 0.70 & 3 & 5.2 & 0.11 $\pm$ 0.08 & 1.10 & 36 \\
+PD2-10 & $K_c$ 2.0 / 0.90, $T_d$ 0.008 / 0.012 & 1 & 5.2 & 0.27 & 1.17 & 38 \\
+PD aggressive & $K_c$ 1.10 / 0.95, $T_d$ 0.015 & 1 & 5.1 & 0.12 & 1.16 & 34 \\
+PID soft & $K_c$ 0.80, $T_i$ 1.5~min & 1 & 5.0 & 0.11 & 1.80 & 100 \\
+PID soft, ramp & $K_c$ 0.80, $T_i$ 1.5~min & 1 & 5.3 & -- & 3.39 & 100 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig19_base_gains.png}
+    \caption{Comparison of the wheel-speed tunings on flat floor.
+    (a) Mean speed error during cruise. (b) Heading deviation at the end
+    of the 3~m straight segment. (c) PWM ripple. The selected tuning,
+    PD-03, is shown in green.}
+    \label{fig:basegains}
+\end{figure}
+
+\textbf{Results.} The speed error was between 5.0 and 5.3\,\% for all
+the tunings (Table~\ref{tab:wheel}). This value is set by the encoder,
+not by the controller: at the 92~Hz sampling rate one encoder count
+corresponds to 0.218~rad/s, that is, 7.4\,\% of the 2.94~rad/s
+reference, so the measured speed jumps between neighboring levels
+(Fig.~\ref{fig:basetraj}b) and differences smaller than one count cannot
+be resolved. For the same reason, the overshoot at start-up (11, 19 or
+26\,\%) was always one, two or three counts. The tunings were therefore
+compared by the heading deviation and by the control effort
+(Fig.~\ref{fig:basegains}):
+\begin{itemize}
+    \item \textbf{PD-03} ($K_c=0.80$, $T_d=0.010$~min on both wheels) gave
+    the smallest heading deviation ($0.06^\circ$ mean over three runs) and
+    the lowest PWM ripple (1.10\,\%), without saturation. It was selected.
+    \item \textbf{Different gains per wheel} (PD2-04, PD2-05, PD2-10) did
+    not improve the straightness: the deviation increased to
+    0.11--$0.27^\circ$ and was less repeatable. The speed loop already
+    compensates the difference between the motors.
+    \item \textbf{Higher gains} (PD aggressive) did not reduce the error,
+    because it is limited by the encoder resolution.
+    \item \textbf{Integral action} (PID soft) did not reduce the error
+    either, increased the PWM ripple by 64\,\% and produced 100\,\% PWM peaks at start-up and when the return began,
+    caused by the integral term accumulated while the robot was stopped.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig18_base_trajectory.png}
+    \caption{Base trajectory with the selected controller (PD-03, run 1).
+    (a) Odometric position $x$ and heading $\theta$: 3~m forward,
+    $180^\circ$ turn and return to the origin. (b) Reference and measured
+    speed of both wheels; the steps of the measured speed are the
+    encoder resolution. (c) PWM of both wheels (control effort).}
+    \label{fig:basetraj}
+\end{figure}
+
+Fig.~\ref{fig:basetraj} shows the complete route with PD-03. The
+odometric error at the end of every run was 0.01~m, which is the
+stopping tolerance of the program. The real error, measured by hand
+between the final and the initial position of the robot in five runs,
+was 1.5, 1.0, 0.9, 1.0 and 1.4~cm, that is, $1.16 \pm 0.27$~cm (mean
+$\pm$ s.d.), 0.4\,\% of the 6~m route. The difference with the
+odometry is due to wheel slip and to the encoder resolution. The PWM stayed between 27 and 30\,\% during
+cruise and the brief peak at the start of the return (34\,\%) is far
+from saturation.
+
+\textbf{Effect of the ramp.} Only the PID soft tuning was logged on the
+ramp. Since it was the same route, it gives the extra effort needed to
+climb (Fig.~\ref{fig:baseramp}): during the climb the mean PWM rose from
+29.5 to 35.6\,\% on the right wheel and from 27.9 to 32.6\,\% on the
+left (+17 to +21\,\%), and during the descent it fell by 7 to 9\,\%. The
+speed error during the climb stayed at 4.7\,\% (5.5\,\% when climbing in
+reverse), equal to that on flat floor, so the speed loop compensates the
+load of the slope. The PWM reached during the climb (about 37\,\%) leaves a
+large margin below saturation. The PD-03 tuning, used in all the
+platform tests of the following sections including the ramp runs, was
+not characterized separately on the ramp. Since it has the same
+proportional and derivative gains, a similar compensation of the slope
+is expected, but this is an inference from the gains, not a measured
+result.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig20_base_ramp.png}
+    \caption{PWM of the wheels on flat floor and on the $10^\circ$ ramp
+    with the same route and controller (moving average of 15 samples).
+    Orange bands: climb; blue bands: descent.}
+    \label{fig:baseramp}
+\end{figure}
+
+\subsection{Integration tests: platform with the base stopped}
+\label{sec:bench}
+Five regulation tests were carried out with the preliminary tuning. In
+each one the ball was released at a different initial position, in
+different quadrants. Two additional metrics were computed: the time to
+first reach the reference, and the maximum distance after that moment.
+Table~\ref{tab:results} summarizes the results, Fig.~\ref{fig:traj}
+shows the trajectories, and Fig.~\ref{fig:time} the position as a
+function of time.
+
+\begin{table}[H]
+\centering
+\caption{Integration tests with the base stopped (preliminary tuning,
+reference at the center of the plate).}
+\label{tab:results}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Run} & \textbf{Initial position} & \textbf{Initial} & \textbf{Time to} & \textbf{Max.\ dist.} & \textbf{Max.\ dist.} & \textbf{Mean dist.} & \textbf{Mean dist.} \\
+ & $(x_0,y_0)$ [cm] & \textbf{distance} [cm] & \textbf{reference} [s] & [cm] & [\% of plate] & [cm] & [\% of plate] \\
+\midrule
+1 & $(-5.63,\;0.63)$  & 5.67 & 0.60 & 3.115 & 15.57 & 0.799 & 3.99 \\
+2 & $(5.75,\;5.53)$   & 7.98 & 2.32 & 0.528 & 2.64  & 0.226 & 1.13 \\
+3 & $(4.60,\;-3.56)$  & 5.82 & 0.62 & 2.877 & 14.39 & 0.844 & 4.22 \\
+4 & $(-5.42,\;-4.25)$ & 6.89 & 2.09 & 0.824 & 4.12  & 0.493 & 2.47 \\
+5 & $(0.14,\;6.64)$   & 6.64 & 0.59 & 0.955 & 4.78  & 0.428 & 2.14 \\
+\midrule
+Mean $\pm$ s.d. & -- & -- & $1.24\pm0.88$ & $1.66\pm1.23$ & $8.3\pm6.2$ & $0.56\pm0.26$ & $2.8\pm1.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig10_trajectories_5tests.png}
+    \caption{Trajectory of the ball on the plate in the five integration
+    tests. Green dot: start (\textit{Inicio}); red square: end
+    (\textit{Fin}); black cross: reference (\textit{Referencia}); blue
+    line: Kalman estimate (\textit{Estimada}); gray dots: camera
+    measurement (\textit{Medida}).}
+    \label{fig:traj}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig11_time_response_5tests.png}
+    \caption{Estimated position $X(t)$ and $Y(t)$ of the ball (blue) and
+    reference (dashed) in the five integration tests. Time in seconds
+    (\textit{Tiempo}).}
+    \label{fig:time}
+\end{figure}
+
+In all five tests the ball was brought to the reference, with a mean
+distance of $0.56$~cm (2.8\,\% of the plate side). In runs 1, 3 and 5
+the ball reached the reference in about 0.6~s but then overshot to about
+3~cm; in runs 2 and 4, which started farthest from the center, the tilt
+saturated and the ball oscillated before settling at 2.1--2.3~s. These
+tests also revealed a limitation of the preliminary tuning: after the
+transient, the servos kept oscillating with an amplitude of
+20--30$^\circ$ while the ball stayed within $\pm1$~cm
+(Fig.~\ref{fig:servo}). This limit cycle results from the high
+bandwidth ($\omega_n=5$~rad/s) combined with the camera delay, the
+clearance of the linkage joints and the dead zones. It motivated the
+final tuning with $\omega_n=3$~rad/s (Section~\ref{sec:lqr}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\textwidth]{FOTOS/Fig12_servo_commands_test1.png}
+    \caption{Control effort in integration run 1 with the preliminary
+    tuning: servo commands (top: servo X, bottom: servo Y, in degrees).
+    After the transient, the servos keep oscillating with an amplitude of
+    about $\pm20$--$30^\circ$.}
+    \label{fig:servo}
+\end{figure}
+
+\subsection{System test on flat floor}
+\label{sec:flat}
+The robot followed a C-shaped path, with straight sections and changes
+of direction, and returned to its initial position, while the platform
+balanced the ball. The test was repeated three times
+(Table~\ref{tab:flat}).
+
+\begin{table}[H]
+\centering
+\caption{System test on flat floor along a C-shaped path (final tuning,
+reference at the center).}
+\label{tab:flat}
+\small
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Run} & \textbf{Duration} & \textbf{Mean $|e_x|$} & \textbf{Mean $|e_y|$} & \textbf{Mean dist.} & \textbf{Mean dist.} & \textbf{Max.\ dist.} & \textbf{Time within} \\
+ & [s] & [cm] & [cm] & [cm] & [\% of plate] & [cm] & \textbf{2 cm} [\%] \\
+\midrule
+1 & 206 & 0.67 & 0.60 & 0.99 & 5.0 & 4.45 & 92 \\
+2 & 509 & 0.66 & 0.67 & 1.04 & 5.2 & 6.07 & 91 \\
+3 & 240 & 0.57 & 0.52 & 0.85 & 4.3 & 3.14 & 97 \\
+\midrule
+Mean $\pm$ s.d. & -- & $0.63\pm0.06$ & $0.60\pm0.08$ & $0.96\pm0.10$ & $4.8\pm0.5$ & $4.55\pm1.47$ & $93\pm3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mean distance to the center was 0.96~cm (4.8\,\% of the plate side)
+and the ball stayed within 2~cm of the center 93\,\% of the time. The
+errors on X and Y are similar (0.63 and 0.60~cm), because on flat floor
+there is no dominant disturbance in one direction. The distance exceeded
+2~cm only in short peaks associated with the starts and turns of the
+robot, after which the ball returned below 2~cm in one to two seconds.
+The largest value, 6.07~cm in run 2, occurred in the first seconds of
+the run, and the ball returned to the center without falling. When the
+robot stopped at the end of a run, the distance remained at about
+0.3~cm, inside the 0.4~cm dead zone of the controller.
+Fig.~\ref{fig:flatpos} shows the position of the ball in the three
+runs, and Fig.~\ref{fig:xy}a the corresponding trajectories on the
+plate: the ball stays in a region of about $\pm2$~cm around the center,
+with similar spread in X and Y.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig14_flat_position.png}
+    \caption{Ball position relative to the reference, $e_x$ (blue) and
+    $e_y$ (orange), in the three runs on flat floor.}
+    \label{fig:flatpos}
+\end{figure}
+
+\subsection{System test on the 10° ramp}
+\label{sec:ramp}
+In each of the four runs the robot climbed and descended the
+$10^\circ$ ramp, and then moved back over it to its initial position
+(videos in Table~\ref{tab:files_own}). The LabVIEW front panel showed a
+forward displacement of about 3~m and a return to the origin with a
+final position error of about 0.05~m, read from the screen recording.
+Table~\ref{tab:ramp} shows the results for the ball.
+
+\begin{table}[H]
+\centering
+\caption{System test on the $10^\circ$ ramp: climb, descent and reverse
+motion (final tuning, reference at the center).}
+\label{tab:ramp}
+\small
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Run} & \textbf{Duration} & \textbf{Mean $|e_x|$} & \textbf{Mean $|e_y|$} & \textbf{Mean dist.} & \textbf{Mean dist.} & \textbf{Max.\ dist.} & \textbf{Time within} \\
+ & [s] & [cm] & [cm] & [cm] & [\% of plate] & [cm] & \textbf{2 cm} [\%] \\
+\midrule
+1 & 101 & 0.48 & 0.94 & 1.15 & 5.8 & 3.94 & 82 \\
+2 & 97 & 0.40 & 0.89 & 1.05 & 5.3 & 7.00 & 81 \\
+3 & 108 & 0.84 & 1.00 & 1.42 & 7.1 & 4.72 & 76 \\
+4 & 73 & 0.67 & 1.23 & 1.54 & 7.7 & 4.81 & 71 \\
+\midrule
+Mean $\pm$ s.d. & -- & $0.60\pm0.20$ & $1.01\pm0.15$ & $1.29\pm0.23$ & $6.5\pm1.1$ & $5.12\pm1.32$ & $78\pm5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the ramp the mean distance increased to 1.29~cm (6.5\,\% of the
+plate side), only 0.33~cm more than on flat floor, and the time within
+2~cm decreased from 93 to 78\,\%. The error on Y, which is the direction
+of motion of the robot, was almost twice the error on X (1.01 against
+0.60~cm), whereas on flat floor both were similar. The slope is
+therefore the dominant disturbance, together with the accelerations at
+the entry and exit of each inclined section. This is visible in
+Fig.~\ref{fig:xy}b, where the trajectories on the ramp are elongated in
+the Y direction, and in Fig.~\ref{fig:ramppos}: in each run, $e_y$
+shows plateaus of 2--3~cm (up to 4--5~cm in runs 2 and 4) that last
+5--10~s, while the robot is on an inclined section. Between them, the
+ball returns close to the center. The maximum distance, 7.0~cm in run
+2, occurred in one of these transients, and the ball stayed on the
+plate.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig15_ramp_position.png}
+    \caption{Ball position relative to the reference, $e_x$ (blue) and
+    $e_y$ (orange), in the four runs on the $10^\circ$ ramp. The flat
+    segments at the start of runs 2 and 4 correspond to the ball at
+    rest inside the dead zone before the robot started to move.}
+    \label{fig:ramppos}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{FOTOS/Fig17_xy_trajectories.png}
+    \caption{Trajectory of the ball on the plate in (a) the three runs
+    on flat floor and (b) the four runs on the $10^\circ$ ramp. Each color
+    is one run.}
+    \label{fig:xy}
+\end{figure}
+
+\subsection{Control effort}
+\label{sec:effort}
+The control effort was evaluated with the commanded plate tilt
+$\theta_d$ (Eq.~\eqref{eq:law}) and with the
+servo angles recorded in the logs (Table~\ref{tab:effort} and
+Fig.~\ref{fig:effort}).
+
+\begin{table}[H]
+\centering
+\caption{Control effort in the system tests (mean of the runs). RMS:
+root mean square; saturation: percentage of samples with
+$|\theta_d|\geq9.9^\circ$.}
+\label{tab:effort}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Test} & \textbf{RMS $\theta_{d,x}$} & \textbf{RMS $\theta_{d,y}$} & \textbf{Max.\ $|\theta_{d,y}|$} & \textbf{Saturation} & \textbf{Servo Y range used} & \textbf{Mean servo speed} \\
+ & [deg] & [deg] & [deg] & [\%] & (1st--99th pct.) [deg] & [deg/s] \\
+\midrule
+Flat floor & 0.89 & 0.99 & 7.4 & 0.07 & 58--113 & 165 \\
+$10^\circ$ ramp & 1.19 & 2.23 & 7.6 & 0.00 & 60--129 & 159 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig16_ramp_effort.png}
+    \caption{Control effort on the $10^\circ$ ramp: commanded plate tilt
+    about X (blue) and Y (orange) in the four runs.}
+    \label{fig:effort}
+\end{figure}
+
+On the ramp, the RMS tilt about Y was 2.3 times that on flat floor
+(2.23 against $0.99^\circ$), while about X it increased only slightly,
+which agrees with the larger error on Y. Fig.~\ref{fig:effort} shows
+that, on each inclined section, $\theta_{d,y}$ forms a plateau of
+$4$--$6^\circ$, with the sign of the slope, and returns to about zero on
+flat sections. The plateaus coincide in time with the offsets of
+Fig.~\ref{fig:ramppos}. The data show that neither the controller nor
+the mechanism saturated: $|\theta_d|$ never reached the $10^\circ$
+limit, and the servo Y used 60--$129^\circ$, about $-37$ to $+32^\circ$
+from its leveled position, within the $\pm50^\circ$ software range. The
+offset is explained instead by the limit of $3^\circ$ on the integral
+term (Section~\ref{sec:lqr}): with the integral at its limit, the
+proportional term must provide the rest of the tilt, which requires a
+steady error of
+\begin{equation}
+e_{ss}\approx\frac{\theta_{req}-\theta_{I,max}}{k_1}+e_{dz}
+\approx\frac{4.6-3}{1.12}+0.4\approx1.8~\mathrm{cm},
+\label{eq:offset}
+\end{equation}
+where $\theta_{req}\approx4.6^\circ$ is the mean commanded tilt measured
+on the slope (run 1), $\theta_{I,max}=3^\circ$ the limit of the integral
+term, $k_1$ the gain of Eq.~\eqref{eq:final} and $e_{dz}=0.4$~cm the
+dead zone. This estimate is close to the measured offsets of
+2--3~cm. Raising the integral limit to about $6^\circ$ would cancel
+this offset; the limit was kept low to avoid windup during the starts
+and turns of the robot. The mean servo speed was similar in both
+conditions (165 and 159~deg/s), so the slope increases the amplitude of
+the tilt but not the activity of the servos.
+
+\subsection{Summary and comparison with the acceptance criteria}
+Fig.~\ref{fig:summary} compares all the runs and Table~\ref{tab:accept}
+summarizes them against the acceptance criteria.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/Fig13_summary_runs.png}
+    \caption{Results of all the runs. (a) Mean distance between the ball
+    and the reference; the dashed line is the 2~cm acceptance limit.
+    (b) Percentage of time with the ball within 2~cm of the reference in
+    the system tests.}
+    \label{fig:summary}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Comparison with the acceptance criteria (mean values per test).}
+\label{tab:accept}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.6cm}YYYL{2.4cm}@{}}
+\toprule
+\textbf{Test} & \textbf{Ball fell} & \textbf{Mean distance [cm] (\% of plate)} & \textbf{Time within 2~cm} & \textbf{Criteria met} \\
+\midrule
+Integration (bench) & 0 of 5 runs & 0.56 (2.8\,\%) & -- & Yes \\
+System, flat floor & 0 of 3 runs & 0.96 (4.8\,\%) & 93\,\% & Yes \\
+System, $10^\circ$ ramp & 0 of 4 runs & 1.29 (6.5\,\%) & 78\,\% & Yes \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Capabilities and limitations}
+\label{sec:limits}
+\textbf{Capabilities.}
+\begin{itemize}
+    \item The ball was kept on the plate in all 12 runs, with a mean
+    distance to the reference below 2~cm in every run, both with the base
+    stopped and with the robot moving on flat floor and on a $10^\circ$
+    ramp.
+    \item The balancing loop works independently of the mobile base and
+    uses only the camera, so it is not affected by the slope or by the
+    accelerations of the robot as an IMU-based loop would be.
+    \item The reference can be changed at run time to any point at least
+    2~cm from the edges of the plate.
+\end{itemize}
+\textbf{Limitations and proposed improvements.} Table~\ref{tab:limitations}
+relates each limitation to its measured effect and to a proposed
+improvement.
+
+\begin{table}[H]
+\centering
+\caption{Limitations of the prototype, observed effect and proposed improvement.}
+\label{tab:limitations}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}YY@{}}
+\toprule
+\textbf{Limitation} & \textbf{Observed effect} & \textbf{Proposed improvement} \\
+\midrule
+Integral limited to $3^\circ$ & Offset of 2--3~cm on the slope; mean distance 1.29~cm on the ramp vs 0.96~cm on flat floor (Eq.~\eqref{eq:offset}) & Raise the limit to about $6^\circ$ with an anti-windup that resets it during turns \\
+Tilt range of the linkage & About $9.3^\circ$ (X) and $13.3^\circ$ (Y); servo Y used up to $37^\circ$ of its $\pm50^\circ$ on the $10^\circ$ ramp & Longer crank or rod attached closer to the center for steeper slopes, at the cost of resolution \\
+Servo activity & Mean servo speed of about 160~deg/s even on flat floor; wear and consumption & Larger dead zone or a filter on the command near the reference \\
+Encoder resolution & One count is 0.218~rad/s at 92~Hz; speed error of about 5\,\% for any tuning & Measure the period between pulses or average over a longer window \\
+Odometry only & Real final error of 1.16~cm vs 0.01~m odometric tolerance; slip not corrected & External reference (floor camera or markers) \\
+Color-based vision & Requires the orange ball and lighting within the tuned HSV range; accuracy of the fixed homography not measured, and its error grows towards the edges when the plate tilts & Automatic HSV calibration; measure the homography error with the ball at known positions \\
+Enable line & GPIO27 has no pull-down; the start-up order must be followed & 10~k$\Omega$ pull-down resistor \\
+Number of runs & 3 runs on flat floor and 4 on the ramp, one prototype and one ball & More runs, other balls and slopes to generalize the results \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =============================================================================
+% END MATTER
+% =============================================================================
+\section{Conclusions}
+This article presented an open, reproducible ball-and-plate platform
+mounted on a differential-drive robot, built from TETRIX parts, three
+3D-printed parts and commercial electronics, with a total cost of
+USD 1,398. The architecture separates the balancing loop (Raspberry
+Pi 4B, camera, Kalman filter and LQR with integral action) from the
+motion of the base (NI myRIO with a PD wheel-speed loop), linked by a
+digital enable line and a UART channel. Using only the camera in the
+balancing loop made it insensitive to the slope and to the
+accelerations of the robot. In the system tests the ball never fell;
+the mean distance to the reference was $0.96\pm0.10$~cm on flat floor
+and $1.29\pm0.23$~cm on a $10^\circ$ ramp, with 93 and 78\,\% of the
+time within 2~cm, and the base returned to its start with a real error
+of $1.16\pm0.27$~cm. The main limitations are the offset on the slope
+caused by the limit of the integral term, the encoder resolution and
+the small number of runs. The platform is suited for teaching and
+experimentation in state estimation, optimal control and the
+integration of distributed embedded systems.
+
+\section*{Ethics statements}
+This work did not involve human subjects, animal experiments or data
+collected from social media platforms.
+
+\section*{CRediT author statement}
+\textbf{Angel Garcia:} Software (camera interface, ball detection and
+ball-and-plate control on the Raspberry Pi), Methodology, Investigation
+(wiring and connections of the Raspberry Pi and the ball-and-plate
+subsystem), Validation, Data curation, Writing -- review and editing.
+\textbf{Thomas Flores:} Methodology (mechanical design), Visualization
+(CAD models), Writing -- review and editing.
+\textbf{Alejandro Guerra:} Methodology (mechanical design),
+Visualization (CAD models), Writing -- review and editing.
+\textbf{Carlos Hilario:} Resources, Investigation (mechanical
+construction of the robot), Writing -- review and editing.
+\textbf{Alex Valenzuela:} Software (motion control of the mobile base in
+LabVIEW), Investigation (wiring and connections of the mobile base),
+Validation, Writing -- review and editing.
+
+\section*{Acknowledgements}
+The authors thank the professors of the Mechatronic Systems Design course
+and the laboratory staff of UTEC for their guidance and for access to the
+laboratory equipment.
+
+\section*{Use of AI tools}
+Claude (Anthropic) was used to help write and edit the text of this
+manuscript, format the \LaTeX{} source, suggest candidate literature
+references, and generate the annotated versions of the CAD figures and
+the diagrams (Figs.~\ref{fig:vmodel}, \ref{fig:proto_cad},
+\ref{fig:views}, \ref{fig:mech}, \ref{fig:wiring}, \ref{fig:control},
+\ref{fig:vision}, \ref{fig:color} and \ref{fig:interface}) from material
+provided by the authors, to propose the configuration of the UART link
+and the enable line, and to write the Python scripts that segment the
+logged data and compute the metrics and plots of
+Section~\ref{sec:validation}, including the comparison of the
+wheel-speed tunings. The scores of the Pugh matrix were
+reviewed by the authors. The
+hardware, CAD models, control software, experiments and experimental
+data were produced by the authors. The authors reviewed the text and
+figures against their prototype, code and datasheets, verified the
+references in the original sources, and are responsible for the final
+content.
+
+% =============================================================================
+% REFERENCES
+% =============================================================================
+\begin{thebibliography}{99}
+
+\bibitem{Awtar2002}
+S. Awtar, C. Bernard, N. Boklund, A. Master, D. Ueda, and K. Craig,
+``Mechatronic design of a ball-on-plate balancing system,''
+\textit{Mechatronics}, vol. 12, no. 2, pp. 217--228, 2002,
+doi: 10.1016/S0957-4158(01)00062-9.
+
+\bibitem{ChengTsai2016}
+C.-C. Cheng and C.-H. Tsai,
+``Visual servo control for balancing a ball-plate system,''
+\textit{International Journal of Mechanical Engineering and Robotics Research},
+vol. 5, no. 1, pp. 28--32, 2016, doi: 10.18178/ijmerr.5.1.28-32.
+
+\bibitem{Park2003}
+J. H. Park and Y. J. Lee,
+``Robust visual servoing for motion control of the ball on a plate,''
+\textit{Mechatronics}, vol. 13, no. 7, pp. 723--738, 2003.
+
+\bibitem{Hauser1992}
+J. Hauser, S. Sastry, and P. Kokotovi\'c,
+``Nonlinear control via approximate input-output linearization: the ball
+and beam example,''
+\textit{IEEE Transactions on Automatic Control}, vol. 37, no. 3,
+pp. 392--398, 1992.
+
+\bibitem{Heins2023}
+A. Heins and A. P. Schoellig,
+``Keep it upright: Model predictive control for nonprehensile object
+transportation with obstacle avoidance on a mobile manipulator,''
+\textit{IEEE Robotics and Automation Letters}, vol. 8, no. 12,
+pp. 7986--7993, 2023, doi: 10.1109/LRA.2023.3324520.
+
+\bibitem{Selvaggio2023}
+M. Selvaggio, A. Garg, F. Ruggiero, G. Oriolo, and B. Siciliano,
+``Non-prehensile object transportation via model predictive
+non-sliding manipulation control,''
+\textit{IEEE Transactions on Control Systems Technology}, 2023.
+
+\bibitem{Brei2024}
+Z. Brei, J. Michaux, B. Zhang, P. Holmes, and R. Vasudevan,
+``Serving time: Real-time, safe motion planning and control for
+manipulation of unsecured objects,''
+\textit{IEEE Robotics and Automation Letters}, vol. 9, no. 3,
+pp. 2383--2390, 2024.
+
+\bibitem{Kaheman2023}
+K. Kaheman, U. Fasel, J. J. Bramburger, B. Strom, J. N. Kutz, and
+S. L. Brunton,
+``The experimental multi-arm pendulum on a cart: A benchmark system for
+chaos, learning, and control,''
+\textit{HardwareX}, vol. 15, p. e00465, 2023,
+doi: 10.1016/j.ohx.2023.e00465.
+
+\bibitem{Myers2020}
+A. D. Myers, J. R. Tempelman, D. Petrushenko, and F. A. Khasawneh,
+``Low-cost double pendulum for high-quality data collection with
+open-source video tracking and analysis,''
+\textit{HardwareX}, vol. 8, p. e00138, 2020.
+
+\bibitem{VDI2206}
+VDI 2206, \textit{Design Methodology for Mechatronic Systems}.
+Berlin, Germany: Beuth Verlag, 2004.
+
+\bibitem{Pugh1991}
+S. Pugh,
+\textit{Total Design: Integrated Methods for Successful Product Engineering}.
+Wokingham, UK: Addison-Wesley, 1991.
+
+\bibitem{Suzuki1985}
+S. Suzuki and K. Abe,
+``Topological structural analysis of digitized binary images by border
+following,'' \textit{Computer Vision, Graphics, and Image Processing},
+vol. 30, no. 1, pp. 32--46, 1985.
+
+\bibitem{Siegwart2011}
+R. Siegwart, I. R. Nourbakhsh, and D. Scaramuzza,
+\textit{Introduction to Autonomous Mobile Robots}, 2nd ed.
+Cambridge, MA, USA: MIT Press, 2011.
+
+\bibitem{Anderson1990}
+B. D. O. Anderson and J. B. Moore,
+\textit{Optimal Control: Linear Quadratic Methods}.
+Englewood Cliffs, NJ, USA: Prentice Hall, 1990.
+
+\bibitem{Astrom2021}
+K. J. \AA str\"om and R. M. Murray,
+\textit{Feedback Systems: An Introduction for Scientists and Engineers},
+2nd ed. Princeton, NJ, USA: Princeton University Press, 2021.
+
+\bibitem{Kalman1960}
+R. E. Kalman,
+``A new approach to linear filtering and prediction problems,''
+\textit{Journal of Basic Engineering}, vol. 82, no. 1, pp. 35--45, 1960.
+
+\bibitem{BarShalom2001}
+Y. Bar-Shalom, X. R. Li, and T. Kirubarajan,
+\textit{Estimation with Applications to Tracking and Navigation}.
+New York, NY, USA: Wiley, 2001.
+
+\bibitem{Smith1957}
+O. J. M. Smith,
+``Closer control of loops with dead time,''
+\textit{Chemical Engineering Progress}, vol. 53, no. 5, pp. 217--219, 1957.
+
+\bibitem{Gonzalez2018}
+R. C. Gonzalez and R. E. Woods,
+\textit{Digital Image Processing}, 4th ed. New York, NY, USA: Pearson, 2018.
+
+\bibitem{Hartley2004}
+R. Hartley and A. Zisserman,
+\textit{Multiple View Geometry in Computer Vision}, 2nd ed.
+Cambridge, UK: Cambridge University Press, 2004.
+
+\bibitem{OpenCV}
+G. Bradski,
+``The OpenCV library,''
+\textit{Dr. Dobb's Journal of Software Tools}, vol. 25, no. 11,
+pp. 120--125, 2000.
+
+\bibitem{Picamera2}
+Raspberry Pi Ltd.,
+``The Picamera2 Library,'' manual. [Online]. Available:
+\url{https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf}
+
+\bibitem{RPiCamera}
+Raspberry Pi Ltd.,
+``Camera -- Raspberry Pi Documentation.'' [Online]. Available:
+\url{https://www.raspberrypi.com/documentation/accessories/camera.html}
+
+\bibitem{RPi4}
+Raspberry Pi Ltd.,
+``Raspberry Pi 4 Model B,'' product brief. [Online]. Available:
+\url{https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-product-brief.pdf}
+
+\bibitem{RPiUART}
+Raspberry Pi Ltd.,
+``Configuration -- UARTs,'' Raspberry Pi Documentation. [Online]. Available:
+\url{https://www.raspberrypi.com/documentation/computers/configuration.html}
+
+\bibitem{OV5647}
+OmniVision Technologies, Inc.,
+``OV5647: 1/4'' color CMOS QSXGA (5 megapixel) image sensor with
+OmniBSI technology,'' preliminary specification, version 1.0, 2009.
+
+\bibitem{MPU6500}
+InvenSense Inc.,
+``MPU-6500 Product Specification,'' document PS-MPU-6500A-01.
+
+\bibitem{Pedley2013}
+M. Pedley,
+``Tilt sensing using a three-axis accelerometer,''
+Freescale Semiconductor, Application Note AN3461, rev. 6, 2013.
+
+\bibitem{PCA9685}
+NXP Semiconductors,
+``PCA9685: 16-channel, 12-bit PWM Fm+ I$^2$C-bus LED controller,''
+product data sheet, rev. 4, 2015.
+
+\bibitem{MG996R}
+Tower Pro,
+``MG996R High Torque Metal Gear Dual Ball Bearing Servo,'' datasheet.
+
+\bibitem{XL4015}
+XLSEMI,
+``XL4015: 180~kHz 36~V 5~A switching current buck DC to DC converter,''
+datasheet.
+
+\bibitem{XL4016}
+XLSEMI,
+``XL4016: 180~kHz 40~V 8~A switching current buck DC to DC converter,''
+datasheet.
+
+\bibitem{myRIO}
+National Instruments,
+``User Guide and Specifications: NI myRIO-1900.''
+
+\bibitem{MDD10A}
+Cytron Technologies,
+``MDD10A Rev2.0: 10~A dual channel DC motor driver,'' user's manual.
+
+\end{thebibliography}
+
+% =============================================================================
+% APPENDIX
+% =============================================================================
+\section*{Appendix A. Additional figures}
+\addcontentsline{toc}{section}{Appendix A. Additional figures}
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{A.\arabic{figure}}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/FigA1_base_all_tunings.png}
+    \caption{Right-wheel speed (blue), reference (dashed) and PWM (orange)
+    during the first 20~s of each wheel-speed test
+    (Section~\ref{sec:wheel}).}
+    \label{fig:appA1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/FigB1_flat_error.png}
+    \caption{Distance between the ball and the reference in the flat-floor runs
+    (Section~\ref{sec:flat}).}
+    \label{fig:appA2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/FigB2_ramp_error.png}
+    \caption{Distance between the ball and the reference in the ramp runs
+    (Section~\ref{sec:ramp}).}
+    \label{fig:appA3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{FOTOS/FigB3_flat_effort.png}
+    \caption{Commanded plate tilt (control effort of the LQR) in the
+    flat-floor runs, for comparison with the ramp in
+    Fig.~\ref{fig:effort}.}
+    \label{fig:appA4}
+\end{figure}
+\clearpage
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{\arabic{figure}}
+
+% =============================================================================
+% BIOGRAPHIES
+% =============================================================================
+\section*{Biographies}
+
+Although each author had different roles (see the CRediT statement), the workload was shared equally (20\,\% each).
+
+\authorbio{Garcia Motta, Angel Giovani}{FOTOS/Angel.jpg}{%
+is an undergraduate student in Mechatronics Engineering at Universidad de
+Ingenier\'ia y Tecnolog\'ia (UTEC), Lima, Peru. His interests include
+robotics, automation, control systems and mechatronic design. In this
+project he contributed mainly to the camera interface, the ball detection and the control of the ball-and-plate platform on the Raspberry Pi, and the wiring of the ball-and-plate electronics.
+}
+
+\authorbio{Flores Baltodano, Thomas Mat\'ias}{FOTOS/Thomas.jpg}{%
+is an undergraduate student in Mechatronics Engineering at Universidad de
+Ingenier\'ia y Tecnolog\'ia (UTEC), Lima, Peru. In this project he
+contributed mainly to the CAD design of the robot and of the ball-and-plate mechanism.
+}
+
+\authorbio{Guerra Figueroa, Alejandro}{FOTOS/Alejandro.jpeg}{%
+is an undergraduate student in Mechatronics Engineering at Universidad de
+Ingenier\'ia y Tecnolog\'ia (UTEC), Lima, Peru. In this project he
+contributed mainly to the CAD design of the robot and of the ball-and-plate mechanism.
+}
+
+\authorbio{Hilario Mayta, Carlos Eduardo}{FOTOS/author4.png}{%
+is an undergraduate student in Mechatronics Engineering at Universidad de
+Ingenier\'ia y Tecnolog\'ia (UTEC), Lima, Peru. In this project he
+contributed mainly to the mechanical construction of the robot.
+}
+
+\authorbio{Valenzuela Quispe, Alex Claudio}{FOTOS/alex_foto.jpeg}{%
+is an undergraduate student in Mechatronics Engineering at Universidad de
+Ingenier\'ia y Tecnolog\'ia (UTEC), Lima, Peru. In this project he
+contributed mainly to the motion control of the mobile base and its wiring and connections.
+}
+
+\end{document}
