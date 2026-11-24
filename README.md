@@ -28,7 +28,7 @@ only vision as the main feedback sensor for the ball position.
 
 Main components:
 - Mobile platform with tilting plate
-- 【entity-DC¦canonical_name=DC】 motors / servomotors for tilt actuation
+- DC motors / servomotors for tilt actuation
 - Camera for ball detection
 - myRIO for real-time control and communication
 - Python + OpenCV for vision and control
@@ -39,3 +39,4 @@ Main components:
 ## Control Architecture
 
 This system does NOT use a single controller. It uses **two controllers in cascade**:
+
